@@ -1,0 +1,45 @@
+# Contributing to Traceto SDK
+
+Thanks for considering a contribution! The SDK is the open-source core of Traceto — PRs are welcome.
+
+## What's in scope for the SDK
+
+The SDK (`sdk/`) covers:
+- ASGI/WSGI middleware
+- PII sanitization
+- Background capture uploader
+
+The backend (test generation, billing, storage) is proprietary and not part of this repo.
+
+## Getting started
+
+```bash
+git clone https://github.com/traceto/traceto-python
+cd traceto-python
+pip install -e ".[dev]"
+pytest
+```
+
+## Pull Request guidelines
+
+- One feature or fix per PR
+- Add or update tests for any changed behaviour
+- Keep the public API backwards compatible
+- Run `ruff check .` and `mypy traceto/` before submitting
+
+## Reporting security issues
+
+**Do not open a GitHub issue for security vulnerabilities.**
+Email security@traceto.io instead. We aim to respond within 48 hours.
+
+## Improving PII detection
+
+The sanitizer (`traceto/sanitizer.py`) is the most community-valuable part.
+If you find a PII pattern it misses, please open an issue or PR with:
+1. The pattern (anonymized example)
+2. A failing test case
+3. Your proposed regex or detection approach
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.
