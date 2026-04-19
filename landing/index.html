@@ -113,7 +113,7 @@
   }
   nav.scrolled {
     border-color: var(--border);
-    background: rgba(8,8,8,0.85);
+    background: rgba(8,8,8,0.92);
     backdrop-filter: blur(16px);
   }
   .nav-logo {
@@ -123,6 +123,8 @@
     color: var(--text);
     text-decoration: none;
     letter-spacing: -0.03em;
+    position: relative;
+    z-index: 110;
   }
   .nav-logo span { color: var(--accent); }
   .nav-links { display: flex; gap: 32px; align-items: center; }
@@ -143,6 +145,90 @@
     transition: opacity 0.2s !important;
   }
   .nav-cta:hover { opacity: 0.85; }
+
+  /* ── HAMBURGER BUTTON ── */
+  .nav-burger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 4px;
+    position: relative;
+    z-index: 110;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .nav-burger:hover { background: var(--bg-3); }
+  .nav-burger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--text-dim);
+    border-radius: 2px;
+    transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease;
+    transform-origin: center;
+  }
+  .nav-burger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-burger.open span:nth-child(2) { opacity: 0; width: 0; }
+  .nav-burger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* ── MOBILE MENU OVERLAY ── */
+  .mobile-menu {
+    display: none; /* shown via JS */
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 105;
+    background: rgba(8,8,8,0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 76px 28px 40px;
+    flex-direction: column;
+    gap: 0;
+    transform: translateY(-8px);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  }
+  .mobile-menu.open {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  .mobile-menu a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 18px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: color 0.2s;
+    letter-spacing: -0.02em;
+  }
+  .mobile-menu a:last-child { border-bottom: none; }
+  .mobile-menu a:hover { color: var(--text); }
+  .mobile-menu a::after { content: '→'; font-size: 14px; color: var(--border-2); }
+  .mobile-menu-cta {
+    margin-top: 20px;
+    display: block !important;
+    background: var(--accent) !important;
+    color: #fff !important;
+    text-align: center;
+    padding: 16px !important;
+    border-radius: 10px !important;
+    font-size: 16px !important;
+    border-bottom: none !important;
+    justify-content: center !important;
+  }
+  .mobile-menu-cta::after { display: none !important; }
 
   /* ── HERO ── */
   #hero {
@@ -765,27 +851,101 @@
 
   /* ── MOBILE ── */
   @media (max-width: 768px) {
-    section { padding: 80px 0; }
-    nav { padding: 0 16px; }
+    /* Layout */
+    section { padding: 64px 0; }
+    .container { padding: 0 20px; }
+    nav { padding: 0 16px; height: 56px; }
+
+    /* Hide desktop links, show burger */
     .nav-links { display: none; }
-    .problem-grid { grid-template-columns: 1fr; }
-    .steps { grid-template-columns: 1fr; }
-    .steps::before { display: none; }
-    .pricing-grid { grid-template-columns: 1fr 1fr 1fr; }
-    .code-compare { grid-template-columns: 1fr; }
+    .nav-burger { display: flex; }
+
+    /* Hero */
+    #hero { padding-top: 120px; padding-bottom: 72px; }
+    .hero-badge { font-size: 11px; }
+    h1.hero-title { font-size: clamp(38px, 10vw, 58px); line-height: 1.08; }
+    .hero-sub { font-size: 15px; margin-bottom: 36px; }
+    .hero-actions { flex-direction: column; align-items: stretch; gap: 10px; }
+    .hero-actions .btn-primary,
+    .hero-actions .btn-secondary { justify-content: center; width: 100%; }
+
+    /* Code compare — stack vertically */
+    .code-compare { grid-template-columns: 1fr; border-radius: 10px; margin-top: 48px; }
     .code-compare .pane-before { display: block; opacity: 0.45; }
-    .code-body { font-size: 11px; min-height: 160px; overflow-x: auto; }
-    .code-compare { border-radius: 8px; }
+    .code-body { font-size: 11px; min-height: 160px; overflow-x: auto; padding: 16px; }
     .pane-before .code-pane-header .title::before { content: "Before "; }
     .pane-after .code-pane-header .title::before { content: "After "; }
-    .investor-card { padding: 40px 24px; }
-    .stats-row { flex-direction: column; }
-    .footer-inner { flex-direction: column; gap: 24px; text-align: center; }
-    .waitlist-row { flex-direction: column; }
+
+    /* Framework badges */
+    .framework-badges { gap: 8px; }
+    .framework-badge { font-size: 12px; padding: 6px 12px; }
+
+    /* Problem */
+    .problem-grid { grid-template-columns: 1fr; }
+    .problem-card { padding: 28px 24px; }
+
+    /* Section titles */
+    .section-title { font-size: clamp(26px, 7vw, 40px); }
+    .section-sub { font-size: 15px; }
+
+    /* Steps */
+    .steps { grid-template-columns: 1fr; gap: 32px; }
+    .steps::before { display: none; }
+    .step { text-align: left; display: flex; flex-direction: column; align-items: flex-start; }
+    .step-num { margin: 0 0 16px; }
+    .step-code { font-size: 11px; }
+
+    /* Comparison table */
+    .compare-table-wrap { border-radius: 10px; }
+
+    /* Pricing */
+    .pricing-grid { grid-template-columns: 1fr 1fr; }
+    .pricing-card { padding: 24px 18px; }
+    .pricing-price { font-size: 32px; }
+    .pricing-features li { font-size: 12px; }
+
+    /* Investor */
+    .investor-card { padding: 36px 20px; }
+    .stats-row { flex-direction: column; background: none; border: none; gap: 1px; }
+    .stat { border: 1px solid var(--border); border-radius: 10px; }
+    .stat-value { font-size: 36px; }
+    .investor-p { font-size: 15px; }
+
+    /* Social proof */
+    .testimonials-grid { grid-template-columns: 1fr; gap: 16px; }
+    #social-proof { padding: 56px 0; }
+
+    /* Security */
+    .security-grid { grid-template-columns: 1fr; }
+
+    /* Setup */
+    .setup-grid { grid-template-columns: 1fr; }
+    .setup-preview { position: static; }
+
+    /* Waitlist */
+    #waitlist { padding: 72px 0; }
+    .waitlist-title { font-size: clamp(28px, 8vw, 48px); }
+    .waitlist-sub { font-size: 14px; margin-bottom: 32px; }
+    .waitlist-form { max-width: 100%; }
+    .waitlist-row { flex-direction: column; gap: 10px; }
+    .waitlist-row .btn-primary { width: 100%; justify-content: center; }
+
+    /* Footer */
+    .footer-inner { flex-direction: column; gap: 20px; text-align: center; }
+    .footer-links { flex-wrap: wrap; justify-content: center; gap: 16px; }
   }
+
   @media (max-width: 480px) {
+    /* Pricing — single column on very small screens */
     .pricing-grid { grid-template-columns: 1fr; }
-    .hero-actions { flex-direction: column; align-items: center; }
+    .pricing-card.popular { order: -1; }
+
+    /* Tighter section spacing */
+    section { padding: 52px 0; }
+    #hero { padding-top: 100px; }
+
+    /* Bigger tap targets for nav-cta in mobile menu */
+    .mobile-menu a { font-size: 17px; padding: 16px 0; }
   }
 
   /* ── FRAMEWORK BADGES ── */
@@ -975,7 +1135,23 @@
     <a href="https://github.com/httrace-io/httrace" target="_blank" rel="noopener">GitHub</a>
     <a href="#waitlist" class="nav-cta">Get free API key</a>
   </div>
+  <!-- Hamburger -->
+  <button class="nav-burger" id="nav-burger" aria-label="Open menu" aria-expanded="false">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
 </nav>
+
+<!-- ── MOBILE MENU ── -->
+<div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+  <a href="#how" class="mobile-menu-link">How it works</a>
+  <a href="#compare" class="mobile-menu-link">vs. Alternatives</a>
+  <a href="#pricing" class="mobile-menu-link">Pricing</a>
+  <a href="docs/" class="mobile-menu-link">Docs</a>
+  <a href="https://github.com/httrace-io/httrace" target="_blank" rel="noopener" class="mobile-menu-link">GitHub</a>
+  <a href="#waitlist" class="mobile-menu-cta">Get your free API key →</a>
+</div>
 
 <!-- ── HERO ── -->
 <section id="hero">
@@ -1655,6 +1831,43 @@
   const nav = document.getElementById('nav');
   window.addEventListener('scroll', () => {
     nav.classList.toggle('scrolled', window.scrollY > 20);
+  });
+
+  // Hamburger menu
+  const burger = document.getElementById('nav-burger');
+  const mobileMenu = document.getElementById('mobile-menu');
+  let menuOpen = false;
+
+  function toggleMenu(open) {
+    menuOpen = open;
+    burger.classList.toggle('open', open);
+    burger.setAttribute('aria-expanded', open);
+    if (open) {
+      mobileMenu.style.display = 'flex';
+      // Trigger transition on next frame
+      requestAnimationFrame(() => mobileMenu.classList.add('open'));
+      mobileMenu.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    } else {
+      mobileMenu.classList.remove('open');
+      mobileMenu.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      // Hide after transition
+      setTimeout(() => { if (!menuOpen) mobileMenu.style.display = 'none'; }, 350);
+    }
+  }
+
+  burger.addEventListener('click', () => toggleMenu(!menuOpen));
+
+  // Close menu on link click
+  mobileMenu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => toggleMenu(false));
+  });
+
+  // Close on outside click / escape
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && menuOpen) toggleMenu(false); });
+  document.addEventListener('click', e => {
+    if (menuOpen && !mobileMenu.contains(e.target) && !burger.contains(e.target)) toggleMenu(false);
   });
 
   // Fade-in on scroll
