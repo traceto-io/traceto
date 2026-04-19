@@ -19,6 +19,8 @@
 <meta name="twitter:image" content="https://httrace.com/og.png">
 <!-- Plausible Analytics -->
 <script defer data-domain="httrace.com" src="https://plausible.io/js/script.js"></script>
+<!-- Cloudflare Turnstile -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
@@ -592,9 +594,18 @@
   .waitlist-sub { font-size: 17px; color: var(--text-muted); margin-bottom: 48px; font-weight: 300; }
   .waitlist-form {
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    gap: 12px;
     max-width: 440px;
     margin: 0 auto 16px;
+  }
+  .waitlist-row {
+    display: flex;
+    gap: 8px;
+  }
+  .cf-turnstile {
+    display: flex;
+    justify-content: center;
   }
   .waitlist-form input {
     flex: 1;
@@ -770,7 +781,7 @@
     .investor-card { padding: 40px 24px; }
     .stats-row { flex-direction: column; }
     .footer-inner { flex-direction: column; gap: 24px; text-align: center; }
-    .waitlist-form { flex-direction: column; }
+    .waitlist-row { flex-direction: column; }
   }
   @media (max-width: 480px) {
     .pricing-grid { grid-template-columns: 1fr; }
@@ -1585,8 +1596,11 @@
       <h2 class="waitlist-title">Start capturing<br>traffic today.</h2>
       <p class="waitlist-sub">Enter your email — we'll send your free API key instantly. No credit card. No setup. <span id="waitlist-count-footer">Developers</span> already building with Httrace.</p>
       <form class="waitlist-form" id="waitlist-form-bottom" onsubmit="handleWaitlist(event,'bottom')">
-        <input type="email" placeholder="you@company.com" required>
-        <button type="submit" class="btn-primary">Get my free API key →</button>
+        <div class="waitlist-row">
+          <input type="email" placeholder="you@company.com" required>
+          <button type="submit" class="btn-primary">Get my free API key →</button>
+        </div>
+        <div class="cf-turnstile" data-sitekey="REPLACE_WITH_YOUR_TURNSTILE_SITE_KEY" data-theme="dark" data-size="flexible"></div>
       </form>
       <div class="waitlist-success" id="success-bottom">
         ✓ Check your inbox — your API key is on its way.
@@ -1703,6 +1717,10 @@
     const btn = form.querySelector('button');
     const email = input.value.trim();
 
+    // Get Turnstile token (falls back to empty string if widget not loaded)
+    const tokenEl = form.querySelector('[name="cf-turnstile-response"]');
+    const cf_turnstile_response = tokenEl ? tokenEl.value : '';
+
     btn.disabled = true;
     btn.textContent = 'Sending key...';
 
@@ -1710,7 +1728,7 @@
       const res = await fetch(`${API_BASE}/v1/waitlist`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, cf_turnstile_response }),
       });
 
       if (res.ok || res.status === 201) {
@@ -1722,6 +1740,8 @@
     } catch (err) {
       btn.disabled = false;
       btn.textContent = 'Get my free API key →';
+      // Reset Turnstile widget so user can retry
+      if (window.turnstile) window.turnstile.reset();
       input.setCustomValidity('Something went wrong — please try again.');
       input.reportValidity();
       setTimeout(() => input.setCustomValidity(''), 3000);
