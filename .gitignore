@@ -44,3 +44,9 @@ tests/integration/
 
 # Stripe CLI
 .stripe/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
