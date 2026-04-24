@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Httrace</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #080808; --bg-2: #0e0e0e; --bg-3: #141414; --bg-4: #1a1a1a;
+    --border: #1f1f1f; --border-2: #2a2a2a;
+    --text: #f0f0f0; --text-muted: #666; --text-dim: #999;
+    --accent: #3b82f6; --accent-dim: rgba(59,130,246,0.10);
+    --green: #22c55e; --red: #ef4444; --yellow: #f59e0b;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: var(--font-body); font-size: 15px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased; min-height: 100vh;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.025; pointer-events: none; z-index: 9999;
+  }
+
+  /* ── NAV ── */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px; height: 60px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: rgba(8,8,8,0.92);
+    backdrop-filter: blur(12px); z-index: 100;
+  }
+  .nav-logo { font-family: var(--font-display); font-weight: 800; font-size: 18px; color: var(--text); text-decoration: none; }
+  .nav-logo span { color: var(--accent); }
+  .nav-right { display: flex; align-items: center; gap: 20px; }
+  .nav-email { font-size: 13px; color: var(--text-muted); font-family: var(--font-mono); }
+  .nav-logout {
+    font-size: 13px; color: var(--text-muted); background: none;
+    border: 1px solid var(--border-2); border-radius: 6px;
+    padding: 6px 14px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
+  }
+  .nav-logout:hover { color: var(--text); border-color: var(--border); }
+
+  /* ── LAYOUT ── */
+  .page { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  .page-header { margin-bottom: 36px; }
+  .page-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .page-title { font-family: var(--font-display); font-size: 32px; font-weight: 800; letter-spacing: -0.02em; }
+
+  /* ── STATS GRID ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+  @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .stats-grid { grid-template-columns: 1fr; } }
+
+  .stat-card {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px;
+  }
+  .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-family: var(--font-mono); }
+  .stat-value { font-family: var(--font-display); font-size: 36px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); line-height: 1; }
+  .stat-value.accent { color: var(--accent); }
+  .stat-value.green { color: var(--green); }
+  .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+  /* ── API KEY CARD ── */
+  .api-key-card {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px; margin-bottom: 32px;
+  }
+  .card-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+  .api-key-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg-3); border: 1px solid var(--border-2);
+    border-radius: 8px; padding: 14px 16px;
+  }
+  .api-key-value {
+    font-family: var(--font-mono); font-size: 14px; color: var(--accent);
+    flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    letter-spacing: 0.02em;
+  }
+  .copy-btn {
+    background: var(--bg-4); border: 1px solid var(--border-2);
+    color: var(--text-dim); font-size: 12px; font-family: var(--font-mono);
+    padding: 6px 14px; border-radius: 6px; cursor: pointer;
+    transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--border); }
+  .copy-btn.copied { color: var(--green); border-color: rgba(34,197,94,0.3); }
+
+  /* ── USAGE BAR ── */
+  .usage-section { margin-bottom: 32px; }
+  .section-title { font-family: var(--font-display); font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+  .usage-bar-wrap {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px;
+  }
+  .usage-bar-label { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px; color: var(--text-dim); }
+  .usage-bar-track { height: 6px; background: var(--bg-4); border-radius: 3px; overflow: hidden; }
+  .usage-bar-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.8s ease; }
+  .usage-bar-fill.warn { background: var(--yellow); }
+  .usage-bar-fill.danger { background: var(--red); }
+
+  /* ── TABLES ── */
+  .section { margin-bottom: 32px; }
+  .table-card {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+  }
+  .table-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .table-header-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; }
+  .table-count { font-size: 12px; color: var(--text-muted); font-family: var(--font-mono); }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { padding: 10px 20px; text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-weight: 400; }
+  td { padding: 12px 20px; font-size: 13px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg-3); }
+
+  .method-badge {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 400;
+    padding: 2px 7px; border-radius: 4px; display: inline-block;
+  }
+  .method-GET { background: rgba(34,197,94,0.1); color: var(--green); }
+  .method-POST { background: rgba(59,130,246,0.1); color: var(--accent); }
+  .method-PUT, .method-PATCH { background: rgba(245,158,11,0.1); color: var(--yellow); }
+  .method-DELETE { background: rgba(239,68,68,0.1); color: var(--red); }
+
+  .status-2xx { color: var(--green); }
+  .status-4xx { color: var(--yellow); }
+  .status-5xx { color: var(--red); }
+
+  .path-cell { font-family: var(--font-mono); color: var(--text-dim); }
+  .latency-cell { color: var(--text-muted); font-family: var(--font-mono); }
+  .time-cell { color: var(--text-muted); font-size: 12px; }
+
+  .empty-state {
+    padding: 48px 20px; text-align: center;
+    color: var(--text-muted); font-size: 14px;
+  }
+  .empty-state code {
+    display: inline-block; margin-top: 12px;
+    font-family: var(--font-mono); font-size: 13px; color: var(--accent);
+    background: var(--bg-3); padding: 8px 16px; border-radius: 6px;
+  }
+
+  /* ── PLAN BADGE ── */
+  .plan-badge {
+    display: inline-block; font-family: var(--font-mono); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 3px 10px; border-radius: 4px;
+    background: var(--accent-dim); border: 1px solid rgba(59,130,246,0.2); color: var(--accent);
+  }
+
+  /* ── SKELETON ── */
+  .skeleton {
+    background: linear-gradient(90deg, var(--bg-3) 25%, var(--bg-4) 50%, var(--bg-3) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px; display: inline-block;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* ── LOADING OVERLAY ── */
+  #loading { display: flex; align-items: center; justify-content: center; min-height: 60vh; flex-direction: column; gap: 16px; }
+  #loading .spinner { width: 32px; height: 32px; border: 2px solid var(--border-2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading p { color: var(--text-muted); font-size: 14px; }
+
+  #content { display: none; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">htt<span>race</span></a>
+  <div class="nav-right">
+    <span class="nav-email" id="nav-email"></span>
+    <button class="nav-logout" id="logout-btn">Log out</button>
+  </div>
+</nav>
+
+<div class="page">
+  <!-- Loading state -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Loading your dashboard…</p>
+  </div>
+
+  <!-- Main content (hidden until data loads) -->
+  <div id="content">
+    <div class="page-header">
+      <div class="page-label">Dashboard</div>
+      <h1 class="page-title">Welcome back.</h1>
+    </div>
+
+    <!-- Stats grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Plan</div>
+        <div class="stat-value" id="stat-plan">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Requests this month</div>
+        <div class="stat-value accent" id="stat-requests">—</div>
+        <div class="stat-sub" id="stat-quota"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total captures</div>
+        <div class="stat-value" id="stat-captures">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Tests generated</div>
+        <div class="stat-value green" id="stat-tests">—</div>
+      </div>
+    </div>
+
+    <!-- API Key -->
+    <div class="api-key-card">
+      <div class="card-title">Your API Key</div>
+      <div class="api-key-row">
+        <div class="api-key-value" id="api-key-display">loading…</div>
+        <button class="copy-btn" id="copy-btn">Copy</button>
+      </div>
+    </div>
+
+    <!-- Usage bar -->
+    <div class="usage-section">
+      <div class="section-title">Monthly Usage</div>
+      <div class="usage-bar-wrap">
+        <div class="usage-bar-label">
+          <span id="usage-label-left">0 requests captured</span>
+          <span id="usage-label-right">0 / 10,000</span>
+        </div>
+        <div class="usage-bar-track">
+          <div class="usage-bar-fill" id="usage-bar" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent captures -->
+    <div class="section">
+      <div class="section-title">Recent Captures</div>
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-header-title">Latest API traffic</span>
+          <span class="table-count" id="captures-count">—</span>
+        </div>
+        <div id="captures-table-wrap">
+          <div class="empty-state">
+            No captures yet.<br>
+            <code>pip install httrace</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Generated tests -->
+    <div class="section">
+      <div class="section-title">Generated Tests</div>
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-header-title">Auto-generated pytest files</span>
+          <span class="table-count" id="tests-count">—</span>
+        </div>
+        <div id="tests-table-wrap">
+          <div class="empty-state">
+            No tests generated yet.<br>
+            <code>httrace generate</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /page -->
+
+<script>
+const API = 'https://api.httrace.com';
+
+// ── Auth ──────────────────────────────────────────────────────────────────
+
+// Handle magic link token in URL (coming from email link)
+const params = new URLSearchParams(window.location.search);
+const urlToken = params.get('token');
+
+async function exchangeToken(token) {
+  const res = await fetch(`${API}/v1/auth/verify?token=${encodeURIComponent(token)}`);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    alert(data.detail || 'Login link is invalid or expired. Please request a new one.');
+    window.location.href = '/login.html';
+    return null;
+  }
+  const data = await res.json();
+  localStorage.setItem('httrace_jwt', data.token);
+  localStorage.setItem('httrace_email', data.email);
+  // Clean URL
+  window.history.replaceState({}, '', '/dashboard.html');
+  return data.token;
+}
+
+async function getJwt() {
+  if (urlToken) return exchangeToken(urlToken);
+  const stored = localStorage.getItem('httrace_jwt');
+  if (!stored) { window.location.href = '/login.html'; return null; }
+  return stored;
+}
+
+function logout() {
+  localStorage.removeItem('httrace_jwt');
+  localStorage.removeItem('httrace_email');
+  window.location.href = '/login.html';
+}
+
+document.getElementById('logout-btn').addEventListener('click', logout);
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+function fmt(n) { return n?.toLocaleString() ?? '—'; }
+
+function relativeTime(isoStr) {
+  const diff = Date.now() - new Date(isoStr).getTime();
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s/60)}m ago`;
+  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+  return `${Math.floor(s/86400)}d ago`;
+}
+
+function statusClass(code) {
+  if (code >= 500) return 'status-5xx';
+  if (code >= 400) return 'status-4xx';
+  return 'status-2xx';
+}
+
+// ── Copy API key ──────────────────────────────────────────────────────────
+
+const copyBtn = document.getElementById('copy-btn');
+copyBtn.addEventListener('click', () => {
+  const key = document.getElementById('api-key-display').textContent;
+  navigator.clipboard.writeText(key).then(() => {
+    copyBtn.textContent = 'Copied!';
+    copyBtn.classList.add('copied');
+    setTimeout(() => { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('copied'); }, 2000);
+  });
+});
+
+// ── Render captures ───────────────────────────────────────────────────────
+
+function renderCaptures(captures) {
+  const wrap = document.getElementById('captures-table-wrap');
+  document.getElementById('captures-count').textContent = `${captures.length} shown`;
+  if (!captures.length) return;
+
+  wrap.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Method</th><th>Path</th><th>Status</th><th>Latency</th><th>Service</th><th>Time</th>
+      </tr></thead>
+      <tbody>${captures.map(c => `
+        <tr>
+          <td><span class="method-badge method-${c.method}">${c.method}</span></td>
+          <td class="path-cell">${c.path}</td>
+          <td class="${statusClass(c.status_code)}">${c.status_code}</td>
+          <td class="latency-cell">${c.latency_ms?.toFixed(1)}ms</td>
+          <td class="path-cell">${c.service}</td>
+          <td class="time-cell">${relativeTime(c.captured_at)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ── Render tests ──────────────────────────────────────────────────────────
+
+function renderTests(tests) {
+  const wrap = document.getElementById('tests-table-wrap');
+  document.getElementById('tests-count').textContent = `${tests.length} shown`;
+  if (!tests.length) return;
+
+  wrap.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Test file</th><th>Service</th><th>Preview</th><th>Generated</th>
+      </tr></thead>
+      <tbody>${tests.map(t => `
+        <tr>
+          <td class="path-cell">${t.test_name}</td>
+          <td class="path-cell">${t.service}</td>
+          <td style="color:var(--text-muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--font-mono);font-size:12px;">${t.code_preview?.split('\n')[0] || '—'}</td>
+          <td class="time-cell">${relativeTime(t.created_at)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────
+
+async function load() {
+  const jwt = await getJwt();
+  if (!jwt) return;
+
+  const headers = { 'Authorization': `Bearer ${jwt}` };
+
+  try {
+    // Load all data in parallel
+    const [meRes, capturesRes, testsRes] = await Promise.all([
+      fetch(`${API}/v1/me`, { headers }),
+      fetch(`${API}/v1/me/captures`, { headers }),
+      fetch(`${API}/v1/me/tests`, { headers }),
+    ]);
+
+    // Handle auth errors
+    if (meRes.status === 401) { logout(); return; }
+    if (!meRes.ok) throw new Error('Failed to load profile');
+
+    const me = await meRes.json();
+    const capturesData = capturesRes.ok ? await capturesRes.json() : { captures: [] };
+    const testsData = testsRes.ok ? await testsRes.json() : { tests: [] };
+
+    // Populate nav
+    document.getElementById('nav-email').textContent = me.email;
+
+    // Stats
+    document.getElementById('stat-plan').innerHTML =
+      `<span class="plan-badge">${me.plan}</span>`;
+    document.getElementById('stat-requests').textContent = fmt(me.usage.requests_captured);
+    document.getElementById('stat-quota').textContent = `of ${fmt(me.usage.quota)} / month`;
+    document.getElementById('stat-captures').textContent = fmt(me.stats.total_captures);
+    document.getElementById('stat-tests').textContent = fmt(me.stats.total_tests_generated);
+
+    // API key
+    document.getElementById('api-key-display').textContent = me.api_key;
+
+    // Usage bar
+    const pct = me.usage.percent;
+    const bar = document.getElementById('usage-bar');
+    bar.style.width = `${Math.min(pct, 100)}%`;
+    if (pct >= 90) bar.classList.add('danger');
+    else if (pct >= 70) bar.classList.add('warn');
+    document.getElementById('usage-label-left').textContent =
+      `${fmt(me.usage.requests_captured)} requests captured`;
+    document.getElementById('usage-label-right').textContent =
+      `${fmt(me.usage.requests_captured)} / ${fmt(me.usage.quota)}  (${pct}%)`;
+
+    // Tables
+    renderCaptures(capturesData.captures || []);
+    renderTests(testsData.tests || []);
+
+    // Show content
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('loading').innerHTML =
+      `<p style="color:var(--red)">Failed to load dashboard. <a href="/login.html" style="color:var(--accent)">Try logging in again.</a></p>`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>
