@@ -87,13 +87,13 @@
     flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     letter-spacing: 0.02em;
   }
-  .copy-btn {
+  .copy-btn, .reveal-btn {
     background: var(--bg-4); border: 1px solid var(--border-2);
     color: var(--text-dim); font-size: 12px; font-family: var(--font-mono);
     padding: 6px 14px; border-radius: 6px; cursor: pointer;
     transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
   }
-  .copy-btn:hover { color: var(--text); border-color: var(--border); }
+  .copy-btn:hover, .reveal-btn:hover { color: var(--text); border-color: var(--border); }
   .copy-btn.copied { color: var(--green); border-color: rgba(34,197,94,0.3); }
 
   /* ── USAGE BAR ── */
@@ -115,6 +115,7 @@
     background: var(--bg-2); border: 1px solid var(--border);
     border-radius: 12px; overflow: hidden;
   }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .table-header {
     padding: 16px 20px; border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between;
@@ -231,6 +232,7 @@
       <div class="card-title">Your API Key</div>
       <div class="api-key-row">
         <div class="api-key-value" id="api-key-display">loading…</div>
+        <button class="reveal-btn" id="reveal-btn">Reveal</button>
         <button class="copy-btn" id="copy-btn">Copy</button>
       </div>
     </div>
@@ -257,10 +259,12 @@
           <span class="table-header-title">Latest API traffic</span>
           <span class="table-count" id="captures-count">—</span>
         </div>
-        <div id="captures-table-wrap">
-          <div class="empty-state">
-            No captures yet.<br>
-            <code>pip install httrace</code>
+        <div class="table-scroll">
+          <div id="captures-table-wrap">
+            <div class="empty-state">
+              No captures yet.<br>
+              <code>pip install httrace</code>
+            </div>
           </div>
         </div>
       </div>
@@ -274,10 +278,12 @@
           <span class="table-header-title">Auto-generated pytest files</span>
           <span class="table-count" id="tests-count">—</span>
         </div>
-        <div id="tests-table-wrap">
-          <div class="empty-state">
-            No tests generated yet.<br>
-            <code>httrace generate</code>
+        <div class="table-scroll">
+          <div id="tests-table-wrap">
+            <div class="empty-state">
+              No tests generated yet.<br>
+              <code>httrace generate</code>
+            </div>
           </div>
         </div>
       </div>
@@ -291,28 +297,7 @@ const API = 'https://api.httrace.com';
 
 // ── Auth ──────────────────────────────────────────────────────────────────
 
-// Handle magic link token in URL (coming from email link)
-const params = new URLSearchParams(window.location.search);
-const urlToken = params.get('token');
-
-async function exchangeToken(token) {
-  const res = await fetch(`${API}/v1/auth/verify?token=${encodeURIComponent(token)}`);
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    alert(data.detail || 'Login link is invalid or expired. Please request a new one.');
-    window.location.href = '/login.html';
-    return null;
-  }
-  const data = await res.json();
-  localStorage.setItem('httrace_jwt', data.token);
-  localStorage.setItem('httrace_email', data.email);
-  // Clean URL
-  window.history.replaceState({}, '', '/dashboard.html');
-  return data.token;
-}
-
-async function getJwt() {
-  if (urlToken) return exchangeToken(urlToken);
+function getJwt() {
   const stored = localStorage.getItem('httrace_jwt');
   if (!stored) { window.location.href = '/login.html'; return null; }
   return stored;
@@ -345,12 +330,29 @@ function statusClass(code) {
   return 'status-2xx';
 }
 
-// ── Copy API key ──────────────────────────────────────────────────────────
+// ── API key reveal / copy ─────────────────────────────────────────────────
+
+let _realApiKey = '';
+let _keyRevealed = false;
+
+function maskKey(key) {
+  // Show prefix "ht_" + dots for the rest
+  const prefix = key.startsWith('ht_') ? 'ht_' : '';
+  return prefix + '•'.repeat(Math.max(key.length - prefix.length, 16));
+}
+
+const revealBtn = document.getElementById('reveal-btn');
+revealBtn.addEventListener('click', () => {
+  _keyRevealed = !_keyRevealed;
+  document.getElementById('api-key-display').textContent =
+    _keyRevealed ? _realApiKey : maskKey(_realApiKey);
+  revealBtn.textContent = _keyRevealed ? 'Hide' : 'Reveal';
+});
 
 const copyBtn = document.getElementById('copy-btn');
 copyBtn.addEventListener('click', () => {
-  const key = document.getElementById('api-key-display').textContent;
-  navigator.clipboard.writeText(key).then(() => {
+  if (!_realApiKey) return;
+  navigator.clipboard.writeText(_realApiKey).then(() => {
     copyBtn.textContent = 'Copied!';
     copyBtn.classList.add('copied');
     setTimeout(() => { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('copied'); }, 2000);
@@ -408,7 +410,7 @@ function renderTests(tests) {
 // ── Main ──────────────────────────────────────────────────────────────────
 
 async function load() {
-  const jwt = await getJwt();
+  const jwt = getJwt();
   if (!jwt) return;
 
   const headers = { 'Authorization': `Bearer ${jwt}` };
@@ -440,8 +442,10 @@ async function load() {
     document.getElementById('stat-captures').textContent = fmt(me.stats.total_captures);
     document.getElementById('stat-tests').textContent = fmt(me.stats.total_tests_generated);
 
-    // API key
-    document.getElementById('api-key-display').textContent = me.api_key;
+    // API key — store real key, show masked by default
+    _realApiKey = me.api_key;
+    _keyRevealed = false;
+    document.getElementById('api-key-display').textContent = maskKey(_realApiKey);
 
     // Usage bar
     const pct = me.usage.percent;
