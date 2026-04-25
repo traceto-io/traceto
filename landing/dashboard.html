@@ -597,6 +597,35 @@
       </div>
     </div>
 
+    <!-- Team / Organisations section -->
+    <div class="section" id="team-section">
+      <div class="section-header-row">
+        <div class="section-title" style="margin-bottom:0">Teams &amp; Organisations</div>
+        <button class="section-action-btn" onclick="showCreateOrgForm()">New organisation +</button>
+      </div>
+
+      <!-- Create org form (hidden by default) -->
+      <div id="create-org-form" style="display:none;background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;">
+        <div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:14px;">Create organisation</div>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div class="alert-form-group">
+            <label class="alert-form-label">Organisation name</label>
+            <input class="alert-form-input" id="new-org-name" type="text" placeholder="Acme Corp" style="min-width:220px">
+          </div>
+          <button class="section-action-btn" onclick="createOrg()">Create</button>
+          <button onclick="hideCreateOrgForm()" style="background:none;border:1px solid var(--border-2);color:var(--text-muted);font-size:12px;padding:8px 14px;border-radius:6px;cursor:pointer;">Cancel</button>
+        </div>
+        <div id="create-org-msg" style="font-family:var(--font-mono);font-size:12px;margin-top:8px;min-height:16px;"></div>
+      </div>
+
+      <!-- Org list -->
+      <div id="orgs-list">
+        <div class="table-card">
+          <div class="empty-state">No organisations yet. Create one to share services with your team.</div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /content -->
 </div><!-- /page -->
 
@@ -1164,6 +1193,175 @@ async function testAlert(alertId) {
   }
 }
 
+// ── Teams / Organisations ────────────────────────────────────────────────
+
+let _currentOrgs = [];
+
+function showCreateOrgForm() {
+  document.getElementById('create-org-form').style.display = 'block';
+  document.getElementById('new-org-name').focus();
+}
+function hideCreateOrgForm() {
+  document.getElementById('create-org-form').style.display = 'none';
+  document.getElementById('create-org-msg').textContent = '';
+}
+
+async function loadOrgs() {
+  const jwt = getJwt();
+  if (!jwt) return;
+  try {
+    const res = await fetch(`${API}/v1/orgs`, { headers: { 'Authorization': `Bearer ${jwt}` } });
+    if (!res.ok) return;
+    const data = await res.json();
+    _currentOrgs = data.orgs || [];
+    renderOrgs(_currentOrgs);
+  } catch (e) { console.warn('Orgs fetch failed', e); }
+}
+
+function renderOrgs(orgs) {
+  const el = document.getElementById('orgs-list');
+  if (!orgs.length) {
+    el.innerHTML = '<div class="table-card"><div class="empty-state">No organisations yet. Create one to share services with your team.</div></div>';
+    return;
+  }
+
+  el.innerHTML = orgs.map(org => `
+    <div class="table-card" style="margin-bottom:12px">
+      <div class="table-header">
+        <div>
+          <span class="table-header-title">${org.name}</span>
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-left:10px">${org.slug}</span>
+          <span class="plan-badge" style="margin-left:8px">${org.role || ''}</span>
+        </div>
+        ${org.role === 'owner' || org.role === 'admin' ? `
+        <button class="section-action-btn" style="font-size:11px;padding:5px 10px" onclick="showInviteForm('${org.slug}')">Invite +</button>
+        ` : ''}
+      </div>
+      <div id="invite-form-${org.slug}" style="display:none;padding:16px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+          <div class="alert-form-group">
+            <label class="alert-form-label">Email</label>
+            <input class="alert-form-input" id="invite-email-${org.slug}" type="email" placeholder="colleague@example.com" style="min-width:200px">
+          </div>
+          <div class="alert-form-group">
+            <label class="alert-form-label">Role</label>
+            <select class="alert-form-select" id="invite-role-${org.slug}">
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <button class="section-action-btn" onclick="inviteMember('${org.slug}')">Send invite</button>
+          <button onclick="hideInviteForm('${org.slug}')" style="background:none;border:1px solid var(--border-2);color:var(--text-muted);font-size:12px;padding:8px 14px;border-radius:6px;cursor:pointer;">Cancel</button>
+        </div>
+        <div id="invite-msg-${org.slug}" style="font-family:var(--font-mono);font-size:12px;margin-top:8px;min-height:16px;"></div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Member</th><th>Role</th><th>Status</th>${(org.role === 'owner' || org.role === 'admin') ? '<th></th>' : ''}</tr></thead>
+          <tbody id="members-${org.slug}"><tr><td colspan="4" style="color:var(--text-muted);padding:12px 20px">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>`).join('');
+
+  // Load members for each org
+  orgs.forEach(org => loadOrgMembers(org.slug, org.role));
+}
+
+function showInviteForm(slug) {
+  document.getElementById(`invite-form-${slug}`).style.display = 'block';
+  document.getElementById(`invite-email-${slug}`)?.focus();
+}
+function hideInviteForm(slug) {
+  document.getElementById(`invite-form-${slug}`).style.display = 'none';
+}
+
+async function loadOrgMembers(slug, myRole) {
+  const jwt = getJwt();
+  if (!jwt) return;
+  try {
+    const res = await fetch(`${API}/v1/orgs/${slug}`, { headers: { 'Authorization': `Bearer ${jwt}` } });
+    if (!res.ok) return;
+    const data = await res.json();
+    const tbody = document.getElementById(`members-${slug}`);
+    if (!tbody) return;
+    const canManage = myRole === 'owner' || myRole === 'admin';
+    tbody.innerHTML = (data.members || []).map(m => `
+      <tr>
+        <td class="path-cell">${m.email}</td>
+        <td><span class="alert-chip ${m.role === 'owner' ? 'alert-chip-slack' : 'alert-chip-email'}">${m.role}</span></td>
+        <td>${m.accepted ? '<span style="color:var(--green);font-size:12px">✓ Active</span>' : '<span style="color:var(--text-muted);font-size:12px">Pending</span>'}</td>
+        ${canManage ? `<td>${m.role !== 'owner' ? `<button class="alert-delete-btn" onclick="removeMember('${slug}','${m.email}')">Remove</button>` : ''}</td>` : ''}
+      </tr>`).join('');
+  } catch (e) {}
+}
+
+async function createOrg() {
+  const jwt = getJwt();
+  if (!jwt) return;
+  const name = document.getElementById('new-org-name').value.trim();
+  const msg  = document.getElementById('create-org-msg');
+  if (!name) { msg.textContent = 'Name is required.'; msg.style.color = 'var(--red)'; return; }
+
+  try {
+    const res = await fetch(`${API}/v1/orgs`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${jwt}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    if (res.ok) {
+      hideCreateOrgForm();
+      document.getElementById('new-org-name').value = '';
+      loadOrgs();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      msg.textContent = err.detail || 'Failed to create organisation.';
+      msg.style.color = 'var(--red)';
+    }
+  } catch (e) {
+    msg.textContent = 'Network error.';
+    msg.style.color = 'var(--red)';
+  }
+}
+
+async function inviteMember(slug) {
+  const jwt = getJwt();
+  if (!jwt) return;
+  const email = document.getElementById(`invite-email-${slug}`)?.value.trim();
+  const role  = document.getElementById(`invite-role-${slug}`)?.value || 'member';
+  const msg   = document.getElementById(`invite-msg-${slug}`);
+  if (!email) { if (msg) { msg.textContent = 'Email is required.'; msg.style.color = 'var(--red)'; } return; }
+
+  try {
+    const res = await fetch(`${API}/v1/orgs/${slug}/invite`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${jwt}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, role }),
+    });
+    if (res.ok) {
+      if (msg) { msg.textContent = `✓ Invite sent to ${email}.`; msg.style.color = 'var(--green)'; }
+      setTimeout(() => { hideInviteForm(slug); if (msg) msg.textContent = ''; }, 3000);
+      loadOrgMembers(slug, 'admin');
+    } else {
+      const err = await res.json().catch(() => ({}));
+      if (msg) { msg.textContent = err.detail || 'Failed to send invite.'; msg.style.color = 'var(--red)'; }
+    }
+  } catch (e) {
+    if (msg) { msg.textContent = 'Network error.'; msg.style.color = 'var(--red)'; }
+  }
+}
+
+async function removeMember(slug, memberEmail) {
+  const jwt = getJwt();
+  if (!jwt || !confirm(`Remove ${memberEmail} from this organisation?`)) return;
+  try {
+    const res = await fetch(`${API}/v1/orgs/${slug}/members/${encodeURIComponent(memberEmail)}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${jwt}` },
+    });
+    if (res.ok || res.status === 204) loadOrgMembers(slug, 'owner');
+  } catch (e) {}
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────
 
 async function load() {
@@ -1240,6 +1438,9 @@ async function load() {
 
     // Load alerts
     loadAlerts();
+
+    // Load organisations
+    loadOrgs();
 
     // Show content
     document.getElementById('loading').style.display = 'none';
