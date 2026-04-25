@@ -435,7 +435,7 @@
   #how { background: var(--bg-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
   .steps {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 40px;
     margin-top: 64px;
     position: relative;
@@ -443,7 +443,7 @@
   .steps::before {
     content: '';
     position: absolute;
-    top: 28px; left: calc(16.67% + 20px); right: calc(16.67% + 20px);
+    top: 28px; left: calc(12.5% + 20px); right: calc(12.5% + 20px);
     height: 1px;
     background: linear-gradient(90deg, var(--accent), transparent 40%, transparent 60%, var(--accent));
     border-top: 1px dashed var(--border-2);
@@ -1380,11 +1380,21 @@
       <div class="step fade-up delay-3">
         <div class="step-num">03</div>
         <h3>Generate</h3>
-        <p>Run one command. Httrace writes real pytest files into your repo, ready to commit.</p>
+        <p>Run one command. Httrace writes real test files into your repo — pytest, Jest, Go, RSpec, or Vitest.</p>
         <div class="step-code">
           <span class="prompt">$</span> <span class="cmd">httrace generate</span><br>
-          <span class="gn">✓ 127 tests generated across 14 endpoints</span><br>
-          <span class="gn">✓ Written to ./tests/integration/</span>
+          <span class="gn">✓ 127 tests across 14 endpoints</span><br>
+          <span class="gn">✓ Written to tests/integration/</span>
+        </div>
+      </div>
+      <div class="step fade-up delay-4">
+        <div class="step-num">04</div>
+        <h3>Guard CI</h3>
+        <p>Add <code style="font-size:11px;color:var(--accent);font-family:var(--font-mono)">httrace diff</code> to your pipeline. Breaking API changes fail the build before they hit production.</p>
+        <div class="step-code">
+          <span class="prompt">$</span> <span class="cmd">httrace diff</span> <span class="arg">--fail-on-breaking</span><br>
+          <span class="gn">✓ No breaking changes</span><br>
+          <span class="arg">exit 0</span>
         </div>
       </div>
     </div>
@@ -1636,6 +1646,27 @@
             <td class="col-httrace"><span class="check">✓</span></td>
             <td><span class="cross">✕</span></td>
             <td><span class="partial">Partial</span></td>
+            <td><span class="cross">✕</span></td>
+          </tr>
+          <tr>
+            <td>Replay testing against staging</td>
+            <td class="col-httrace"><span class="check">✓</span></td>
+            <td><span class="cross">✕</span></td>
+            <td><span class="partial">Partial</span></td>
+            <td><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Slack / email anomaly alerts</td>
+            <td class="col-httrace"><span class="check">✓</span></td>
+            <td><span class="cross">✕</span></td>
+            <td><span class="partial">Paid only</span></td>
+            <td><span class="cross">✕</span></td>
+          </tr>
+          <tr>
+            <td>VS Code extension</td>
+            <td class="col-httrace"><span class="check">✓</span></td>
+            <td><span class="cross">✕</span></td>
+            <td><span class="cross">✕</span></td>
             <td><span class="cross">✕</span></td>
           </tr>
           <tr>
