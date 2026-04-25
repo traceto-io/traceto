@@ -164,6 +164,55 @@
     background: var(--bg-3); padding: 8px 16px; border-radius: 6px;
   }
 
+  /* ── PLAN STAT CARD UPGRADE ── */
+  .stat-plan-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .stat-upgrade-btn {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em;
+    color: var(--accent); background: var(--accent-dim);
+    border: 1px solid rgba(59,130,246,0.25); border-radius: 6px;
+    padding: 4px 10px; cursor: pointer; transition: all 0.15s;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .stat-upgrade-btn:hover { background: rgba(59,130,246,0.18); border-color: rgba(59,130,246,0.5); }
+  .stat-upgrade-btn.hidden { display: none; }
+
+  /* ── UPGRADE MODAL ── */
+  .upgrade-modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 500;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  .upgrade-modal-overlay.open { display: flex; }
+  .upgrade-modal {
+    background: var(--bg-2); border: 1px solid var(--border-2);
+    border-radius: 16px; padding: 32px;
+    max-width: 900px; width: 100%;
+    max-height: 90vh; overflow-y: auto;
+    animation: modal-in 0.2s ease;
+  }
+  @keyframes modal-in {
+    from { opacity: 0; transform: translateY(16px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .upgrade-modal-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 24px; gap: 12px;
+  }
+  .upgrade-modal-title {
+    font-family: var(--font-display); font-size: 22px; font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .upgrade-modal-sub {
+    font-size: 13px; color: var(--text-muted); margin-top: 4px;
+  }
+  .upgrade-modal-close {
+    background: var(--bg-3); border: 1px solid var(--border-2);
+    color: var(--text-muted); font-size: 16px; width: 32px; height: 32px;
+    border-radius: 8px; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; transition: all 0.15s;
+  }
+  .upgrade-modal-close:hover { color: var(--text); border-color: var(--border); }
+
   /* ── PLAN BADGE ── */
   .plan-badge {
     display: inline-block; font-family: var(--font-mono); font-size: 11px;
@@ -314,7 +363,10 @@
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Plan</div>
-        <div class="stat-value" id="stat-plan">—</div>
+        <div class="stat-plan-row">
+          <div class="stat-value" id="stat-plan">—</div>
+          <button class="stat-upgrade-btn" id="stat-upgrade-btn" onclick="openUpgradeModal()">Upgrade →</button>
+        </div>
         <div class="stat-sub" id="stat-plan-limits"></div>
       </div>
       <div class="stat-card">
@@ -449,6 +501,20 @@
   </div><!-- /content -->
 </div><!-- /page -->
 
+<!-- Upgrade modal -->
+<div class="upgrade-modal-overlay" id="upgrade-modal" onclick="if(event.target===this)closeUpgradeModal()">
+  <div class="upgrade-modal">
+    <div class="upgrade-modal-header">
+      <div>
+        <div class="upgrade-modal-title">Upgrade your plan</div>
+        <div class="upgrade-modal-sub">Choose the plan that fits your scale.</div>
+      </div>
+      <button class="upgrade-modal-close" onclick="closeUpgradeModal()">✕</button>
+    </div>
+    <div class="plan-grid" id="plan-grid-modal"><!-- populated by JS --></div>
+  </div>
+</div>
+
 <script>
 const API = 'https://api.httrace.com';
 
@@ -572,7 +638,14 @@ const PLANS = [
     name: 'Free',
     price: '€0',
     period: '/ month',
-    features: ['10,000 req / month', '1 service', 'pytest output', 'Community support'],
+    features: [
+      '10,000 req / month',
+      '1 service',
+      'pytest · Jest · Go · RSpec · Vitest',
+      'API drift detection',
+      'OpenAPI export',
+      'Community support',
+    ],
     available: true,
   },
   {
@@ -580,15 +653,30 @@ const PLANS = [
     name: 'Starter',
     price: '€99',
     period: '/ month',
-    features: ['1M req / month', '3 services', 'GitHub integration', 'Email support'],
-    available: false, // Stripe not live yet
+    features: [
+      '1M req / month',
+      '3 services',
+      'All 5 test formats',
+      'GitHub Actions integration',
+      'OpenAPI export',
+      'Email support',
+    ],
+    available: false,
   },
   {
     id: 'growth',
     name: 'Growth',
     price: '€499',
     period: '/ month',
-    features: ['10M req / month', '10 services', 'Slack alerts', 'PII guarantees', 'Priority support'],
+    features: [
+      '10M req / month',
+      '10 services',
+      'All 5 test formats',
+      'Slack & email alerts',
+      'Replay testing',
+      'PII guarantees',
+      'Priority support',
+    ],
     available: false,
     popular: true,
   },
@@ -597,16 +685,21 @@ const PLANS = [
     name: 'Enterprise',
     price: 'Custom',
     period: '',
-    features: ['Unlimited requests', 'Unlimited services', 'On-premise option', 'SSO / SAML', 'SLA + dedicated support'],
+    features: [
+      'Unlimited requests',
+      'Unlimited services',
+      'On-premise option',
+      'SSO / SAML',
+      'Dedicated support + SLA',
+    ],
     available: false,
     cta: 'Talk to us',
     ctaHref: 'mailto:founders@httrace.com',
   },
 ];
 
-function renderPlanGrid(currentPlan) {
-  const grid = document.getElementById('plan-grid');
-  grid.innerHTML = PLANS.map(plan => {
+function _buildPlanGrid(currentPlan) {
+  return PLANS.map(plan => {
     const isCurrent = plan.id === currentPlan;
     const features = plan.features.map(f => `<li>${f}</li>`).join('');
 
@@ -614,7 +707,7 @@ function renderPlanGrid(currentPlan) {
     if (isCurrent) {
       btnHtml = `<button class="plan-upgrade-btn current-btn" disabled>Current plan</button>`;
     } else if (plan.ctaHref) {
-      btnHtml = `<a href="${plan.ctaHref}" class="plan-upgrade-btn" style="display:block;text-align:center;text-decoration:none;">Talk to us</a>`;
+      btnHtml = `<a href="${plan.ctaHref}" class="plan-upgrade-btn" style="display:block;text-align:center;text-decoration:none;">${plan.cta || 'Talk to us'}</a>`;
     } else if (!plan.available) {
       btnHtml = `<button class="plan-upgrade-btn soon-btn" disabled>Coming soon</button>`;
     } else {
@@ -633,8 +726,38 @@ function renderPlanGrid(currentPlan) {
   }).join('');
 }
 
+function renderPlanGrid(currentPlan) {
+  const html = _buildPlanGrid(currentPlan);
+  document.getElementById('plan-grid').innerHTML = html;
+  document.getElementById('plan-grid-modal').innerHTML = html;
+
+  // Show/hide upgrade button: hide it if user is already on the highest paid plan
+  const btn = document.getElementById('stat-upgrade-btn');
+  if (currentPlan === 'enterprise') {
+    btn.classList.add('hidden');
+  } else {
+    btn.classList.remove('hidden');
+  }
+}
+
+function openUpgradeModal() {
+  document.getElementById('upgrade-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeUpgradeModal() {
+  document.getElementById('upgrade-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeUpgradeModal();
+});
+
 function handleUpgrade(planId) {
   // Will wire up Stripe Checkout here once billing is live
+  closeUpgradeModal();
   alert(`Upgrade to ${planId} — Stripe checkout coming soon.`);
 }
 
