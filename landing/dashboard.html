@@ -232,6 +232,42 @@
     border: 1px solid var(--border-2); cursor: default;
   }
 
+  /* ── COVERAGE & CHANGES ── */
+  .section-header-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px; flex-wrap: wrap; gap: 12px;
+  }
+  .service-select {
+    background: var(--bg-3); border: 1px solid var(--border-2);
+    color: var(--text-dim); font-family: var(--font-mono); font-size: 12px;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer; outline: none;
+  }
+  .service-select:focus { border-color: var(--accent); color: var(--text); }
+  .section-action-btn {
+    background: var(--accent); color: #fff;
+    font-family: var(--font-display); font-size: 12px; font-weight: 700;
+    border: none; border-radius: 6px; padding: 7px 14px;
+    cursor: pointer; transition: opacity 0.15s;
+  }
+  .section-action-btn:hover { opacity: 0.85; }
+  .section-action-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* Status dots in coverage table */
+  .cov-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .cov-dot-green { background: var(--green); }
+  .cov-dot-gray { background: var(--border-2); }
+
+  /* Change badges */
+  .change-badge {
+    display: inline-block; font-family: var(--font-mono); font-size: 10px;
+    padding: 2px 8px; border-radius: 4px; margin-right: 4px; text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .change-badge-breaking { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+  .change-badge-new { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+  .change-badge-schema { background: rgba(245,158,11,0.1); color: var(--yellow); border: 1px solid rgba(245,158,11,0.2); }
+  .change-detail { font-size: 12px; color: var(--text-muted); font-family: var(--font-mono); }
+
   /* ── SKELETON ── */
   .skeleton {
     background: linear-gradient(90deg, var(--bg-3) 25%, var(--bg-4) 50%, var(--bg-3) 75%);
@@ -362,6 +398,49 @@
               No tests generated yet.<br>
               <code>httrace generate</code>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coverage section -->
+    <div class="section" id="coverage-section">
+      <div class="section-header-row">
+        <div class="section-title" style="margin-bottom:0">API Coverage</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <select class="service-select" id="service-select" onchange="loadCoverageAndChanges()">
+            <option value="">Select service…</option>
+          </select>
+          <button class="section-action-btn" id="openapi-btn" onclick="downloadOpenApi()" disabled>Export OpenAPI ↓</button>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-header-title">Endpoints observed</span>
+          <span class="table-count" id="coverage-count">—</span>
+        </div>
+        <div class="table-scroll">
+          <div id="coverage-table-wrap">
+            <div class="empty-state">Select a service above to see coverage.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Changes / drift section -->
+    <div class="section" id="changes-section">
+      <div class="section-header-row">
+        <div class="section-title" style="margin-bottom:0">API Drift</div>
+        <button class="section-action-btn" id="regen-btn" onclick="regenerateTests()" disabled>Regenerate tests</button>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-header-title">Schema changes since last generation</span>
+          <span class="table-count" id="changes-count">—</span>
+        </div>
+        <div class="table-scroll">
+          <div id="changes-table-wrap">
+            <div class="empty-state">Select a service above to see schema drift.</div>
           </div>
         </div>
       </div>
@@ -559,6 +638,170 @@ function handleUpgrade(planId) {
   alert(`Upgrade to ${planId} — Stripe checkout coming soon.`);
 }
 
+// ── Service selector + Coverage + Changes ────────────────────────────────
+
+let _currentApiKey = '';
+let _services = [];
+
+function populateServiceSelector(captures, tests) {
+  const seen = new Set();
+  captures.forEach(c => c.service && seen.add(c.service));
+  tests.forEach(t => t.service && seen.add(t.service));
+  _services = Array.from(seen).sort();
+
+  const sel = document.getElementById('service-select');
+  sel.innerHTML = '<option value="">Select service…</option>' +
+    _services.map(s => `<option value="${s}">${s}</option>`).join('');
+
+  // Auto-select if only one service
+  if (_services.length === 1) {
+    sel.value = _services[0];
+    loadCoverageAndChanges();
+  }
+}
+
+async function loadCoverageAndChanges() {
+  const service = document.getElementById('service-select').value;
+  if (!service) return;
+
+  const jwt = getJwt();
+  const headers = { 'Authorization': `Bearer ${jwt}` };
+  const apiKey = _currentApiKey;
+
+  document.getElementById('openapi-btn').disabled = false;
+  document.getElementById('regen-btn').disabled = false;
+
+  // Coverage
+  try {
+    const covRes = await fetch(`${API}/v1/coverage?service=${encodeURIComponent(service)}`, {
+      headers: { 'X-Api-Key': apiKey }
+    });
+    if (covRes.ok) {
+      const cov = await covRes.json();
+      renderCoverage(cov);
+    }
+  } catch (e) { console.warn('Coverage fetch failed', e); }
+
+  // Changes
+  try {
+    const chgRes = await fetch(`${API}/v1/changes?service=${encodeURIComponent(service)}`, {
+      headers: { 'X-Api-Key': apiKey }
+    });
+    if (chgRes.ok) {
+      const chg = await chgRes.json();
+      renderChanges(chg);
+    }
+  } catch (e) { console.warn('Changes fetch failed', e); }
+}
+
+function renderCoverage(data) {
+  const wrap = document.getElementById('coverage-table-wrap');
+  const endpoints = data.endpoints || [];
+  document.getElementById('coverage-count').textContent =
+    `${endpoints.length} endpoint${endpoints.length !== 1 ? 's' : ''}`;
+
+  if (!endpoints.length) {
+    wrap.innerHTML = '<div class="empty-state">No captures found for this service.</div>';
+    return;
+  }
+
+  wrap.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Method</th><th>Endpoint</th><th>Captures</th><th>Status codes</th><th>Tests</th>
+      </tr></thead>
+      <tbody>${endpoints.map(ep => {
+        const tested = ep.has_tests !== false;
+        return `<tr>
+          <td><span class="method-badge method-${ep.method}">${ep.method}</span></td>
+          <td class="path-cell">${ep.path}</td>
+          <td>${ep.captures}</td>
+          <td class="path-cell">${(ep.statuses || []).sort().join(', ')}</td>
+          <td><span class="cov-dot ${tested ? 'cov-dot-green' : 'cov-dot-gray'}"></span>${tested ? 'Generated' : 'Not yet'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+}
+
+function renderChanges(data) {
+  const wrap = document.getElementById('changes-table-wrap');
+  const changes = data.changes || [];
+  const untested = data.untested_endpoints || [];
+  const total = changes.length + untested.length;
+
+  document.getElementById('changes-count').textContent =
+    total ? `${total} change${total !== 1 ? 's' : ''}` : 'No changes detected';
+
+  if (!total) {
+    wrap.innerHTML = '<div class="empty-state" style="color:var(--green)">✓ No schema drift detected. Tests are up to date.</div>';
+    return;
+  }
+
+  let rows = '';
+
+  changes.forEach(ep => {
+    (ep.changes || []).forEach(ch => {
+      const badgeClass = ch.type === 'breaking' ? 'change-badge-breaking' :
+                         ch.type === 'new_field' ? 'change-badge-new' : 'change-badge-schema';
+      rows += `<tr>
+        <td class="path-cell">${ep.endpoint}</td>
+        <td><span class="change-badge ${badgeClass}">${ch.type.replace('_', ' ')}</span></td>
+        <td class="change-detail">${ch.detail || ''}</td>
+      </tr>`;
+    });
+  });
+
+  untested.forEach(ep => {
+    rows += `<tr>
+      <td class="path-cell">${ep}</td>
+      <td><span class="change-badge change-badge-new">new endpoint</span></td>
+      <td class="change-detail">No tests generated yet</td>
+    </tr>`;
+  });
+
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>Endpoint</th><th>Change</th><th>Detail</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+async function regenerateTests() {
+  const service = document.getElementById('service-select').value;
+  if (!service || !_currentApiKey) return;
+
+  const btn = document.getElementById('regen-btn');
+  btn.disabled = true;
+  btn.textContent = 'Regenerating…';
+
+  try {
+    const res = await fetch(`${API}/v1/generate-tests?service=${encodeURIComponent(service)}`, {
+      method: 'POST',
+      headers: { 'X-Api-Key': _currentApiKey }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      btn.textContent = `✓ ${data.generated} files updated`;
+      setTimeout(() => { btn.disabled = false; btn.textContent = 'Regenerate tests'; }, 3000);
+      loadCoverageAndChanges(); // refresh changes view
+    } else {
+      btn.textContent = 'Error — try again';
+      setTimeout(() => { btn.disabled = false; btn.textContent = 'Regenerate tests'; }, 3000);
+    }
+  } catch (e) {
+    btn.textContent = 'Error — try again';
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'Regenerate tests'; }, 3000);
+  }
+}
+
+function downloadOpenApi() {
+  const service = document.getElementById('service-select').value;
+  if (!service || !_currentApiKey) return;
+  const url = `${API}/v1/openapi.yaml?service=${encodeURIComponent(service)}&x-api-key=${encodeURIComponent(_currentApiKey)}`;
+  // Open in new tab — browser will download or display the YAML
+  window.open(url, '_blank');
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────
 
 async function load() {
@@ -611,6 +854,7 @@ async function load() {
 
     // API key — store real key, show masked by default
     _realApiKey = me.api_key;
+    _currentApiKey = me.api_key;  // for coverage/changes/openapi calls
     _keyRevealed = false;
     document.getElementById('api-key-display').textContent = maskKey(_realApiKey);
 
@@ -628,6 +872,9 @@ async function load() {
     // Tables
     renderCaptures(capturesData.captures || []);
     renderTests(testsData.tests || []);
+
+    // Populate service selector for Coverage + Changes
+    populateServiceSelector(capturesData.captures || [], testsData.tests || []);
 
     // Show content
     document.getElementById('loading').style.display = 'none';
