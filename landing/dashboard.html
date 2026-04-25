@@ -317,6 +317,52 @@
   .change-badge-schema { background: rgba(245,158,11,0.1); color: var(--yellow); border: 1px solid rgba(245,158,11,0.2); }
   .change-detail { font-size: 12px; color: var(--text-muted); font-family: var(--font-mono); }
 
+  /* ── ALERTS ── */
+  .alert-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr auto auto;
+    gap: 10px; align-items: end; margin-bottom: 20px;
+  }
+  @media (max-width: 900px) { .alert-form-row { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 500px) { .alert-form-row { grid-template-columns: 1fr; } }
+  .alert-form-group { display: flex; flex-direction: column; gap: 6px; }
+  .alert-form-label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+  .alert-form-input, .alert-form-select {
+    background: var(--bg-3); border: 1px solid var(--border-2);
+    color: var(--text-dim); font-family: var(--font-mono); font-size: 12px;
+    padding: 8px 12px; border-radius: 6px; outline: none; width: 100%;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .alert-form-input:focus, .alert-form-select:focus { border-color: var(--accent); color: var(--text); }
+  .alert-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    gap: 16px; flex-wrap: wrap;
+  }
+  .alert-item:last-child { border-bottom: none; }
+  .alert-item-info { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; flex: 1; }
+  .alert-chip {
+    font-family: var(--font-mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.06em; padding: 2px 8px; border-radius: 4px;
+  }
+  .alert-chip-slack { background: rgba(74,144,226,0.12); color: #4a90e2; border: 1px solid rgba(74,144,226,0.2); }
+  .alert-chip-email { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+  .alert-chip-trigger { background: rgba(245,158,11,0.1); color: var(--yellow); border: 1px solid rgba(245,158,11,0.2); }
+  .alert-dest { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .alert-item-actions { display: flex; gap: 8px; }
+  .alert-delete-btn {
+    background: none; border: 1px solid var(--border-2); color: var(--text-muted);
+    font-size: 11px; padding: 4px 10px; border-radius: 5px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .alert-delete-btn:hover { border-color: var(--red); color: var(--red); }
+  .alert-test-btn {
+    background: none; border: 1px solid var(--border-2); color: var(--text-muted);
+    font-size: 11px; padding: 4px 10px; border-radius: 5px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .alert-test-btn:hover { border-color: var(--accent); color: var(--accent); }
+
   /* ── SKELETON ── */
   .skeleton {
     background: linear-gradient(90deg, var(--bg-3) 25%, var(--bg-4) 50%, var(--bg-3) 75%);
@@ -474,6 +520,59 @@
         <div class="table-scroll">
           <div id="coverage-table-wrap">
             <div class="empty-state">Select a service above to see coverage.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts section -->
+    <div class="section" id="alerts-section">
+      <div class="section-header-row">
+        <div class="section-title" style="margin-bottom:0">Anomaly Alerts</div>
+      </div>
+      <div class="table-card" style="padding:20px">
+        <!-- Alert creation form -->
+        <div style="margin-bottom:4px">
+          <div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:14px;color:var(--text-dim)">New alert</div>
+          <div class="alert-form-row" id="alert-form-row">
+            <div class="alert-form-group">
+              <label class="alert-form-label">Service</label>
+              <input class="alert-form-input" id="alert-service" type="text" placeholder="my-service">
+            </div>
+            <div class="alert-form-group">
+              <label class="alert-form-label">Trigger</label>
+              <select class="alert-form-select" id="alert-trigger">
+                <option value="error_spike">Error spike</option>
+                <option value="latency_spike">Latency spike</option>
+                <option value="new_endpoint">New endpoint</option>
+              </select>
+            </div>
+            <div class="alert-form-group">
+              <label class="alert-form-label">Threshold (%)</label>
+              <input class="alert-form-input" id="alert-threshold" type="number" value="10" min="1" max="100">
+            </div>
+            <div class="alert-form-group">
+              <label class="alert-form-label">Channel</label>
+              <select class="alert-form-select" id="alert-channel" onchange="updateAlertDestLabel()">
+                <option value="slack">Slack</option>
+                <option value="email">Email</option>
+              </select>
+            </div>
+            <div class="alert-form-group" style="grid-column: span 1;">
+              <label class="alert-form-label" id="alert-dest-label">Slack webhook URL</label>
+              <input class="alert-form-input" id="alert-destination" type="text" placeholder="https://hooks.slack.com/…" style="min-width:200px">
+            </div>
+            <div class="alert-form-group">
+              <label class="alert-form-label">&nbsp;</label>
+              <button class="section-action-btn" id="alert-add-btn" onclick="createAlert()">Add alert</button>
+            </div>
+          </div>
+          <div id="alert-form-msg" style="font-family:var(--font-mono);font-size:12px;margin-top:8px;min-height:18px;"></div>
+        </div>
+        <!-- Alert list -->
+        <div style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px">
+          <div id="alerts-list">
+            <div class="empty-state" style="padding:32px 20px">No alerts configured yet.</div>
           </div>
         </div>
       </div>
@@ -925,6 +1024,146 @@ function downloadOpenApi() {
   window.open(url, '_blank');
 }
 
+// ── Alerts ────────────────────────────────────────────────────────────────
+
+function updateAlertDestLabel() {
+  const ch = document.getElementById('alert-channel').value;
+  document.getElementById('alert-dest-label').textContent =
+    ch === 'slack' ? 'Slack webhook URL' : 'Email address';
+  document.getElementById('alert-destination').placeholder =
+    ch === 'slack' ? 'https://hooks.slack.com/…' : 'you@example.com';
+}
+
+async function loadAlerts() {
+  const jwt = getJwt();
+  if (!jwt) return;
+  try {
+    const res = await fetch(`${API}/v1/alerts`, {
+      headers: { 'Authorization': `Bearer ${jwt}` }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    renderAlerts(data.alerts || []);
+  } catch (e) { console.warn('Alerts fetch failed', e); }
+}
+
+function renderAlerts(alerts) {
+  const list = document.getElementById('alerts-list');
+  if (!alerts.length) {
+    list.innerHTML = '<div class="empty-state" style="padding:32px 20px">No alerts configured yet.</div>';
+    return;
+  }
+
+  const triggerLabel = {
+    error_spike: 'Error spike',
+    latency_spike: 'Latency spike',
+    new_endpoint: 'New endpoint',
+    breaking_change: 'Breaking change',
+  };
+
+  list.innerHTML = alerts.map(a => `
+    <div class="alert-item" data-alert-id="${a.id}">
+      <div class="alert-item-info">
+        <span class="alert-chip alert-chip-${a.channel}">${a.channel}</span>
+        <span class="alert-chip alert-chip-trigger">${triggerLabel[a.alert_on] || a.alert_on}</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-dim)">${a.service}</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">≥ ${a.threshold}%</span>
+        <span class="alert-dest" title="${a.destination}">${a.destination}</span>
+        ${a.last_fired_at ? `<span style="font-size:11px;color:var(--text-muted)">Last fired ${relativeTime(a.last_fired_at)}</span>` : ''}
+      </div>
+      <div class="alert-item-actions">
+        <button class="alert-test-btn" onclick="testAlert(${a.id})">Test</button>
+        <button class="alert-delete-btn" onclick="deleteAlert(${a.id})">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+async function createAlert() {
+  const jwt = getJwt();
+  if (!jwt) return;
+
+  const btn = document.getElementById('alert-add-btn');
+  const msg = document.getElementById('alert-form-msg');
+  const service     = document.getElementById('alert-service').value.trim();
+  const alert_on    = document.getElementById('alert-trigger').value;
+  const threshold   = parseFloat(document.getElementById('alert-threshold').value) || 10;
+  const channel     = document.getElementById('alert-channel').value;
+  const destination = document.getElementById('alert-destination').value.trim();
+
+  if (!service || !destination) {
+    msg.textContent = 'Service and destination are required.';
+    msg.style.color = 'var(--red)';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Adding…';
+  msg.textContent = '';
+
+  try {
+    const res = await fetch(`${API}/v1/alerts`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${jwt}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ service, channel, destination, alert_on, threshold }),
+    });
+    if (res.ok) {
+      msg.textContent = '✓ Alert created.';
+      msg.style.color = 'var(--green)';
+      document.getElementById('alert-service').value = '';
+      document.getElementById('alert-destination').value = '';
+      loadAlerts();
+      setTimeout(() => { msg.textContent = ''; }, 3000);
+    } else {
+      const err = await res.json().catch(() => ({}));
+      msg.textContent = err.detail || 'Failed to create alert.';
+      msg.style.color = 'var(--red)';
+    }
+  } catch (e) {
+    msg.textContent = 'Network error.';
+    msg.style.color = 'var(--red)';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Add alert';
+}
+
+async function deleteAlert(alertId) {
+  const jwt = getJwt();
+  if (!jwt) return;
+  if (!confirm('Delete this alert?')) return;
+
+  try {
+    const res = await fetch(`${API}/v1/alerts/${alertId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${jwt}` },
+    });
+    if (res.ok || res.status === 204) loadAlerts();
+  } catch (e) { console.warn('Delete alert failed', e); }
+}
+
+async function testAlert(alertId) {
+  const jwt = getJwt();
+  if (!jwt) return;
+
+  const btn = document.querySelector(`[data-alert-id="${alertId}"] .alert-test-btn`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+
+  try {
+    const res = await fetch(`${API}/v1/alerts/test?alert_id=${alertId}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${jwt}` },
+    });
+    if (res.ok) {
+      if (btn) { btn.textContent = '✓ Sent'; setTimeout(() => { btn.disabled = false; btn.textContent = 'Test'; }, 3000); }
+    } else {
+      const err = await res.json().catch(() => ({}));
+      alert(err.detail || 'Failed to send test alert.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Test'; }
+    }
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Test'; }
+  }
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────
 
 async function load() {
@@ -970,8 +1209,8 @@ async function load() {
       document.getElementById('plan-limits-row').innerHTML = `
         <span class="plan-limit-item"><span class="plan-limit-dot"></span>${me.limits.requests_per_month} requests / month</span>
         <span class="plan-limit-item"><span class="plan-limit-dot"></span>${me.limits.services} service${me.limits.services === '1' ? '' : 's'}</span>
-        <span class="plan-limit-item"><span class="plan-limit-dot"></span>pytest output</span>
-        <span class="plan-limit-item"><span class="plan-limit-dot"></span>${me.plan === 'free' ? 'No credit card' : 'Full access'}</span>
+        <span class="plan-limit-item"><span class="plan-limit-dot"></span>pytest · Jest · Go · RSpec · Vitest</span>
+        <span class="plan-limit-item"><span class="plan-limit-dot"></span>${me.plan === 'free' ? 'No credit card required' : 'Full access'}</span>
       `;
     }
 
@@ -998,6 +1237,9 @@ async function load() {
 
     // Populate service selector for Coverage + Changes
     populateServiceSelector(capturesData.captures || [], testsData.tests || []);
+
+    // Load alerts
+    loadAlerts();
 
     // Show content
     document.getElementById('loading').style.display = 'none';
