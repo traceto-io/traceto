@@ -480,7 +480,7 @@ stub_request(:get, "https://api.stripe.com/v1/charges/ch_123")
 | Day 1 onboarding (quick-start tip) | Cron 09:00 UTC daily | ✅ Live |
 | Day 3 check-in | Cron 09:00 UTC daily | ✅ Live |
 
-- **Provider:** Resend (`re_NZRuxido_5qcuTU9neyzG8YXH3xvrGDBE`)
+- **Provider:** Resend (API key stored in `/opt/httrace/backend/.env` on server — never in git)
 - **From:** `Httrace <noreply@httrace.com>`
 - **Notify:** `arikwittlich@gmail.com`
 - Onboarding script: `/opt/httrace/backend/scripts/send_onboarding.py`
@@ -580,14 +580,14 @@ Stored in `/opt/httrace/.env` on the server.
 |----------|--------------|
 | `DATABASE_URL` | `sqlite:////data/httrace.db` |
 | `ENV` | `production` |
-| `RESEND_API_KEY` | `re_NZRuxido_5qcuTU9neyzG8YXH3xvrGDBE` |
+| `RESEND_API_KEY` | `re_...` — aus Resend Dashboard, nie in git |
 | `RESEND_DOMAIN_VERIFIED` | `true` |
 | `FROM_EMAIL` | `Httrace <noreply@httrace.com>` |
 | `NOTIFY_EMAIL` | `arikwittlich@gmail.com` |
 | `CORS_ORIGINS` | `https://httrace.com,https://www.httrace.com,http://localhost:3000,http://localhost:8080` |
-| `TURNSTILE_SECRET_KEY` | `0x4AAAAAAC_reYI-EU_yUcs2nC0UBtdQwlQ` |
-| `PROVISION_SECRET` | `1ffd294d4f7ca75f270491048e0c2f3dea353752eb17107a12ad6d78c550ebbe` |
-| `JWT_SECRET` | Set at container start with `openssl rand -hex 32` |
+| `TURNSTILE_SECRET_KEY` | `0x4AAA...` — aus Cloudflare Turnstile Dashboard, nie in git |
+| `PROVISION_SECRET` | Neu generieren: `openssl rand -hex 32` |
+| `JWT_SECRET` | Neu generieren: `openssl rand -hex 32` |
 
 ---
 
