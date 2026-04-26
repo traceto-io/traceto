@@ -434,9 +434,9 @@ function loadUsers() {
     .then(r => r.json())
     .then(d => {
       document.getElementById('user-count').textContent = d.total + ' total';
-      const maxCaptures = Math.max(1, ...d.users.map(u => u.total_captures));
+      const maxCaptures = Math.max(1, ...d.users.map(u => u.captures_this_month));
       const rows = d.users.map(u => {
-        const pct = Math.round((u.captures_this_month / maxCaptures) * 100);
+        const pct = Math.min(100, Math.round((u.captures_this_month / maxCaptures) * 100));
         const isRecent = u.last_active && (Date.now() - new Date(u.last_active).getTime()) < 7 * 86400_000;
         return `<tr>
           <td class="user-email">
