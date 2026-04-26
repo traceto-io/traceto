@@ -44,3 +44,16 @@ tests/integration/
 
 # Stripe CLI
 .stripe/
+
+# Backend — NEVER push (lives only on the server)
+backend/
+
+# Local-only directories
+video/
+demo/
+legal/
+sdk/
+
+# Build artifacts
+sdk-ruby/*.gem
+node_modules/

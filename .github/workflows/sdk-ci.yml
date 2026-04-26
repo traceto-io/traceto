@@ -1,0 +1,57 @@
+name: SDK CI
+
+on:
+  push:
+    branches: [main]
+    paths: ["sdk/**"]
+  pull_request:
+    branches: [main]
+    paths: ["sdk/**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          cd sdk
+          pip install -e ".[dev]"
+          pip install pytest pytest-asyncio httpx ruff mypy
+
+      - name: Lint
+        run: |
+          cd sdk
+          ruff check httrace/
+
+      - name: Type check
+        run: |
+          cd sdk
+          mypy httrace/ --ignore-missing-imports
+
+      - name: Tests
+        run: |
+          cd sdk
+          pytest tests/ -v
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Security audit
+        run: |
+          pip install pip-audit
+          cd sdk && pip-audit
