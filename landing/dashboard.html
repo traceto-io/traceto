@@ -217,7 +217,7 @@
   .upgrade-modal {
     background: var(--bg-2); border: 1px solid var(--border-2);
     border-radius: 20px; padding: 36px;
-    max-width: 980px; width: 100%;
+    max-width: 1140px; width: 100%;
     max-height: 90vh; overflow-y: auto;
     animation: modal-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
@@ -258,10 +258,11 @@
   /* ── PLAN UPGRADE ── */
   .upgrade-section { margin-bottom: 32px; }
   .plan-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
   }
-  @media (max-width: 700px)  { .plan-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 460px)  { .plan-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 900px)  { .plan-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 600px)  { .plan-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 400px)  { .plan-grid { grid-template-columns: 1fr; } }
 
   .plan-card {
     background: var(--bg-3); border: 1px solid var(--border);
@@ -729,7 +730,7 @@
     <div class="upgrade-modal-header">
       <div>
         <div class="upgrade-modal-title">Plans &amp; Pricing</div>
-        <div class="upgrade-modal-sub">Prices match httrace.com — all plans include all 5 test formats.</div>
+        <div class="upgrade-modal-sub">Prices match httrace.com — <a href="/pricing.html" target="_blank" style="color:var(--accent);text-decoration:none">see full comparison →</a></div>
       </div>
       <button class="upgrade-modal-close" onclick="closeUpgradeModal()">✕</button>
     </div>
@@ -875,98 +876,87 @@ const PLANS = [
     price: '€0',
     priceSuffix: '',
     period: '/ month',
-    desc: 'For solo devs exploring the tool.',
+    desc: 'For solo devs evaluating the tool.',
     features: [
-      '10K captured requests / month',
-      '1 service',
-      'All 5 test formats',
-      'Community support',
+      '50K captured requests / month',
+      '2 services',
+      'pytest + Jest',
+      'Auth fixture detection',
+      'API drift detection',
+      '7-day data retention',
     ],
     available: true,
   },
   {
-    id: 'hobby',
-    name: 'Hobby',
-    price: '€19',
+    id: 'indie',
+    name: 'Indie',
+    price: '€15',
     priceSuffix: '',
     period: '/ month',
-    desc: 'For side projects with real users.',
+    desc: 'For freelancers & side projects.',
     features: [
       '500K requests / month',
-      '3 services',
-      'All 5 test formats',
-      'Auth fixtures auto-detected',
-      'Dependency mocking',
-      'Email support',
-    ],
-    available: false,
-  },
-  {
-    id: 'starter',
-    name: 'Starter',
-    price: '€79',
-    priceSuffix: '',
-    period: '/ month',
-    desc: 'For early-stage startups.',
-    features: [
-      '2M requests / month',
       '5 services',
       'All 5 test formats',
-      'GitHub Actions integration',
-      'API drift detection',
-      'Email support',
-    ],
-    available: false,
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    price: '€149',
-    priceSuffix: '',
-    period: '/ month',
-    desc: 'For growing teams that need headroom.',
-    features: [
-      '5M requests / month',
-      '10 services',
-      'All 5 test formats',
-      'Slack & email alerts',
-      'Replay testing',
+      'Dependency mocking',
       'OpenAPI export',
-      'Priority support',
+      '30-day data retention',
     ],
     available: false,
   },
   {
-    id: 'growth',
-    name: 'Growth',
-    price: '€299',
+    id: 'startup',
+    name: 'Startup',
+    price: '€59',
     priceSuffix: '',
     period: '/ month',
-    desc: 'For scale-ups with real stakes.',
+    desc: 'For early-stage teams shipping fast.',
     features: [
-      '20M requests / month',
-      'Unlimited services',
+      '3M requests / month',
+      '15 services',
       'All 5 test formats',
-      'PII compliance guarantee',
-      'VS Code extension',
-      'Team management',
-      'Priority support',
+      'Dependency mocking',
+      'Replay testing',
+      'Slack & email alerts',
+      '5 team seats',
+      '30-day data retention',
     ],
     available: false,
     popular: true,
   },
   {
+    id: 'business',
+    name: 'Business',
+    price: '€149',
+    priceSuffix: '',
+    period: '/ month',
+    desc: 'For growing teams with production traffic.',
+    features: [
+      '15M requests / month',
+      '50 services',
+      'All 5 test formats',
+      'Dependency mocking',
+      'PII compliance guarantee',
+      '20 team seats',
+      'Priority support',
+      '90-day data retention',
+    ],
+    available: false,
+  },
+  {
     id: 'enterprise',
     name: 'Enterprise',
-    price: '€1,500',
+    price: '€499',
     priceSuffix: '+',
     period: '/ month',
-    desc: 'For teams that need control and SLAs.',
+    desc: 'For scale-ups with compliance & SLA needs.',
     features: [
-      'Unlimited requests',
+      '100M+ requests / month',
+      'Unlimited services',
       'On-premise option',
       'SSO / SAML',
       '99.9% SLA',
+      'Unlimited seats',
       'Dedicated support',
       'Custom data retention',
     ],
