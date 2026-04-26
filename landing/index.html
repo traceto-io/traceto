@@ -1144,7 +1144,7 @@
     font-size: 15px; color: var(--text-muted); line-height: 1.7;
     padding: 0 24px;
   }
-  .faq-item.open .faq-answer { max-height: 300px; padding: 0 24px 22px; }
+  .faq-item.open .faq-answer { padding: 0 24px 22px; }
 
   /* Responsive additions */
   @media (max-width: 900px) {
@@ -2061,8 +2061,15 @@
   function toggleFaq(btn) {
     const item = btn.closest('.faq-item');
     const isOpen = item.classList.contains('open');
-    document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
-    if (!isOpen) item.classList.add('open');
+    document.querySelectorAll('.faq-item.open').forEach(el => {
+      el.classList.remove('open');
+      el.querySelector('.faq-answer').style.maxHeight = '0';
+    });
+    if (!isOpen) {
+      item.classList.add('open');
+      const answer = item.querySelector('.faq-answer');
+      answer.style.maxHeight = answer.scrollHeight + 'px';
+    }
   }
 
   // Play video only when scrolled into view
