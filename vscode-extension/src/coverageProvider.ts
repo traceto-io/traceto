@@ -48,9 +48,9 @@ export class CoverageProvider {
   ): Promise<CoverageResult> {
     const raw = await this._get(apiUrl, "/v1/coverage", { service }, apiKey);
     const result: CoverageResult = {
-      service: raw.service,
+      service: raw.service as string,
       endpoints: raw.endpoints as EndpointCoverage[],
-      total_captures: raw.total_captures,
+      total_captures: raw.total_captures as number,
       fetchedAt: new Date(),
     };
     this._cache = result;
