@@ -608,27 +608,29 @@
     font-family: var(--font-mono);
   }
 
-  .coming-soon-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(8,8,8,0.65);
-    backdrop-filter: blur(2px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0;
-    z-index: 2;
+  .pricing-card { display: flex; flex-direction: column; }
+  .pricing-features { flex: 1; }
+  .pricing-cta {
+    display: block; width: 100%; padding: 10px 0; text-align: center;
+    border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none;
+    transition: opacity 0.2s, background 0.2s; font-family: var(--font-body);
+    cursor: pointer; border: none; margin-top: 24px;
   }
-  .coming-soon-badge {
-    background: var(--bg-3);
+  .pricing-cta.primary { background: var(--accent); color: #fff; }
+  .pricing-cta.primary:hover { opacity: 0.88; }
+  .pricing-cta.outline {
+    background: transparent; color: var(--text-muted);
     border: 1px solid var(--border-2);
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 6px 14px;
-    border-radius: 20px;
+  }
+  .pricing-cta.outline:hover { color: var(--text); border-color: var(--border); }
+  .pricing-cta.contact { background: transparent; color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
+  .pricing-cta.contact:hover { background: rgba(59,130,246,0.08); }
+  .pricing-coming-pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    color: var(--text-muted); font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 10px;
+    border-radius: 20px; margin-top: 8px; width: 100%;
   }
 
   /* ── INVESTOR ── */
@@ -1658,14 +1660,14 @@
           </tr>
           <tr>
             <td>Dependency mocks auto-generated</td>
-            <td class="col-httrace"><span class="partial">In progress</span></td>
+            <td class="col-httrace"><span class="check">✓</span></td>
             <td><span class="check">✓</span></td>
             <td><span class="cross">✕</span></td>
             <td><span class="cross">✕</span></td>
           </tr>
           <tr>
             <td>Tests run without infrastructure</td>
-            <td class="col-httrace"><span class="partial">In progress</span></td>
+            <td class="col-httrace"><span class="check">✓</span></td>
             <td><span class="check">✓</span></td>
             <td><span class="cross">✕</span></td>
             <td><span class="cross">✕</span></td>
@@ -1714,7 +1716,7 @@
           </tr>
           <tr>
             <td>VS Code extension</td>
-            <td class="col-httrace"><span class="partial">Planned</span></td>
+            <td class="col-httrace"><span class="check">✓</span></td>
             <td><span class="cross">✕</span></td>
             <td><span class="cross">✕</span></td>
             <td><span class="cross">✕</span></td>
@@ -1761,10 +1763,10 @@
           <li>API drift detection</li>
           <li>7-day data retention</li>
         </ul>
+        <a href="#waitlist" class="pricing-cta primary">Get started free</a>
       </div>
       <!-- Indie -->
-      <div class="pricing-card" style="position:relative">
-        <div class="coming-soon-overlay"><span class="coming-soon-badge">Coming soon</span></div>
+      <div class="pricing-card">
         <div class="pricing-tier">Indie</div>
         <div class="pricing-price"><span class="currency">€</span>15<span class="period"> /mo</span></div>
         <p class="pricing-desc">For freelancers &amp; side projects.</p>
@@ -1777,10 +1779,11 @@
           <li>OpenAPI export</li>
           <li>30-day data retention</li>
         </ul>
+        <a href="#waitlist" class="pricing-cta outline">Coming soon</a>
+        <span class="pricing-coming-pill">In development</span>
       </div>
       <!-- Startup — Most Popular -->
-      <div class="pricing-card popular" style="position:relative">
-        <div class="coming-soon-overlay"><span class="coming-soon-badge">Coming soon</span></div>
+      <div class="pricing-card popular">
         <div class="popular-badge">Most Popular</div>
         <div class="pricing-tier">Startup</div>
         <div class="pricing-price"><span class="currency">€</span>59<span class="period"> /mo</span></div>
@@ -1795,10 +1798,11 @@
           <li>Slack &amp; email alerts</li>
           <li>5 team seats</li>
         </ul>
+        <a href="#waitlist" class="pricing-cta outline">Coming soon</a>
+        <span class="pricing-coming-pill">In development</span>
       </div>
       <!-- Business -->
-      <div class="pricing-card" style="position:relative">
-        <div class="coming-soon-overlay"><span class="coming-soon-badge">Coming soon</span></div>
+      <div class="pricing-card">
         <div class="pricing-tier">Business</div>
         <div class="pricing-price"><span class="currency">€</span>149<span class="period"> /mo</span></div>
         <p class="pricing-desc">For growing teams with production traffic.</p>
@@ -1812,10 +1816,11 @@
           <li>20 team seats</li>
           <li>Priority support</li>
         </ul>
+        <a href="#waitlist" class="pricing-cta outline">Coming soon</a>
+        <span class="pricing-coming-pill">In development</span>
       </div>
       <!-- Enterprise -->
-      <div class="pricing-card" style="position:relative">
-        <div class="coming-soon-overlay"><span class="coming-soon-badge">Coming soon</span></div>
+      <div class="pricing-card">
         <div class="pricing-tier">Enterprise</div>
         <div class="pricing-price" style="font-size:28px">from <span class="currency" style="font-size:16px">€</span>499<span class="period"> /mo</span></div>
         <p class="pricing-desc">For scale-ups with compliance &amp; SLA needs.</p>
@@ -1828,6 +1833,7 @@
           <li>99.9% SLA</li>
           <li>Dedicated support</li>
         </ul>
+        <a href="mailto:founders@httrace.com" class="pricing-cta contact">Talk to us →</a>
       </div>
     </div>
     <div class="pricing-compare-link fade-up delay-2">
