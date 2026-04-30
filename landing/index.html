@@ -309,6 +309,19 @@
     line-height: 1.7;
   }
   .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .hero-email-form {
+    display: flex; gap: 8px; max-width: 460px; margin: 0 auto; width: 100%;
+  }
+  .hero-email-form input[type="email"] {
+    flex: 1; background: var(--bg-2); border: 1px solid var(--border-2);
+    border-radius: 8px; padding: 12px 16px; color: var(--text);
+    font-family: var(--font-body); font-size: 14px; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s; min-width: 0;
+  }
+  .hero-email-form input[type="email"]:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+  }
+  .hero-email-form input::placeholder { color: var(--text-muted); }
   .btn-primary {
     display: inline-flex;
     align-items: center;
@@ -965,6 +978,9 @@
     .hero-actions { flex-direction: column; align-items: stretch; gap: 10px; }
     .hero-actions .btn-primary,
     .hero-actions .btn-secondary { justify-content: center; width: 100%; }
+    .hero-email-form { flex-direction: column; }
+    .hero-email-form input[type="email"],
+    .hero-email-form .btn-primary { width: 100%; justify-content: center; }
 
     /* Code compare — stack vertically */
     .code-compare { grid-template-columns: 1fr; border-radius: 10px; margin-top: 48px; }
@@ -1282,11 +1298,14 @@
       <h1 class="hero-title fade-up delay-1">Your users write<br>your tests.</h1>
       <p class="hero-sub fade-up delay-2">Httrace captures real production traffic and automatically generates integration tests — without you writing a single line. Works with Python, Node.js, Go, and Ruby.</p>
       <div class="hero-actions fade-up delay-3">
-        <a href="#waitlist" class="btn-primary">Get your free API key →</a>
-        <a href="#how" class="btn-secondary">See how it works ↓</a>
+        <form class="hero-email-form" id="hero-email-form" onsubmit="heroEmailJump(event)">
+          <input type="email" id="hero-email-input" placeholder="you@company.com" required autocomplete="email">
+          <button type="submit" class="btn-primary">Get free API key →</button>
+        </form>
       </div>
-      <div class="fade-up delay-4" style="margin-top:16px;font-size:13px;color:var(--text-muted);">
-        Already signed up? <a href="login.html" style="color:var(--accent);text-decoration:none;">Log in to your dashboard →</a>
+      <div class="fade-up delay-4" style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;">
+        <a href="#how" class="btn-secondary" style="padding:9px 20px;font-size:14px;">See how it works ↓</a>
+        <span style="font-size:13px;color:var(--text-muted);">Already signed up? <a href="login.html" style="color:var(--accent);text-decoration:none;">Log in →</a></span>
       </div>
 
       <!-- Code compare -->
@@ -1988,45 +2007,52 @@
     <div class="faq-list fade-up">
       <div class="faq-item">
         <button class="faq-question" onclick="toggleFaq(this)">
-          Which frameworks does Httrace support?
+          Is there a free plan?
           <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
-        <div class="faq-answer">FastAPI, Django, Flask, Starlette, Express.js (Node.js), Go (chi/gin/net/http), and Rails (Rack) are all fully supported. Install via <code style="background:var(--bg-3);padding:2px 6px;border-radius:4px;font-family:var(--font-mono)">pip install httrace</code>, <code style="background:var(--bg-3);padding:2px 6px;border-radius:4px;font-family:var(--font-mono)">npm install httrace</code>, or add the Go module / Ruby gem. If your framework isn't listed, <a href="mailto:founders@httrace.com" style="color:var(--accent)">reach out</a> — we prioritize based on demand.</div>
+        <div class="faq-answer">Yes. The Free plan includes 50,000 captured requests per month — forever, no credit card required. At the default 10% sample rate that's roughly 500,000 real API calls per month, which covers most side projects and small services comfortably. Paid plans start at €19/month and go up to 15M captures for larger teams.</div>
       </div>
       <div class="faq-item">
         <button class="faq-question" onclick="toggleFaq(this)">
-          Does Httrace store my raw request data?
+          How is Httrace different from Postman or mocking libraries?
           <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
-        <div class="faq-answer">No raw request bodies are stored permanently. Payloads are processed in-memory to extract structure and generate test fixtures, then discarded. Configurable retention applies to metadata only. Enterprise customers can enable on-premise mode for zero external data transfer.</div>
+        <div class="faq-answer">Postman requires you to manually write requests and assertions. Mocking libraries (like <code style="color:var(--accent)">responses</code>, <code style="color:var(--accent)">msw</code>, or <code style="color:var(--accent)">nock</code>) require you to describe the behavior you want to mock. Httrace does the opposite: it captures what actually happened in production and writes the test for you — real payloads, real status codes, real edge cases your users already triggered. No setup, no manual effort.</div>
       </div>
       <div class="faq-item">
         <button class="faq-question" onclick="toggleFaq(this)">
-          How does PII sanitization work?
+          Which frameworks and test formats are supported?
           <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
-        <div class="faq-answer">The SDK applies a two-layer filter before any data is transmitted: (1) a field-name blocklist that catches common patterns like <code style="color:var(--accent)">password</code>, <code style="color:var(--accent)">token</code>, <code style="color:var(--accent)">ssn</code>, and (2) regex patterns that detect credit cards, IBANs, JWTs, emails, and phone numbers in values. Matched fields are replaced with placeholder strings in generated test fixtures.</div>
+        <div class="faq-answer">Middleware: FastAPI, Django, Flask, Starlette, Express.js, Go (chi/gin/net/http), and Rails (Rack). Test output: pytest, Jest, Vitest, Go testing + testify, and RSpec — all on every plan. Switch format any time with the <code style="font-family:var(--font-mono);font-size:0.9em">--format</code> flag. If your framework isn't listed, <a href="mailto:founders@httrace.com" style="color:var(--accent)">reach out</a> — we prioritize based on demand.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Is my production data safe? What actually gets sent to your servers?
+          <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer">The SDK applies a two-layer PII filter <em>before</em> any data leaves your server: a field-name blocklist (<code style="color:var(--accent)">password</code>, <code style="color:var(--accent)">token</code>, <code style="color:var(--accent)">ssn</code>, etc.) and regex patterns for credit cards, IBANs, JWTs, emails, and phone numbers. Matched values are replaced with placeholders. Request bodies are processed to extract structure and generate fixtures — they are not stored permanently. The SDK is MIT open-source, so you can audit exactly what gets sent.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          What happens when I hit my monthly capture limit?
+          <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer">Captures simply stop for the rest of the month — your production traffic is never blocked or slowed down. The middleware silently drops new captures once the quota is reached. You'll get an email warning at 80% and 100% usage. To avoid hitting the limit, lower your <code style="font-family:var(--font-mono);font-size:0.9em">sample_rate</code> (e.g. <code style="font-family:var(--font-mono);font-size:0.9em">0.05</code> = 5%) or upgrade your plan.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Can I use Httrace only in staging or CI — not in production?
+          <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer">Yes. Many teams run Httrace only on staging to bootstrap their test suite, then remove the middleware from production entirely. Set <code style="font-family:var(--font-mono);font-size:0.9em">sample_rate=1.0</code> in staging so you capture everything. Once you've generated your tests, the middleware can be removed — the generated test files are plain code with no Httrace dependency.</div>
       </div>
       <div class="faq-item">
         <button class="faq-question" onclick="toggleFaq(this)">
           What performance overhead does the middleware add?
           <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
-        <div class="faq-answer">Capture is asynchronous and happens off the critical path. In benchmarks on FastAPI, median latency increase is under 2ms at <code style="color:var(--accent)">sample_rate=0.1</code> (the default). At 100% sample rate, expect ~8ms overhead. We recommend 5–10% sampling in production.</div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          Which test frameworks are supported as output?
-          <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <div class="faq-answer">All five test formats are supported on every plan: pytest (Python), Jest and Vitest (JavaScript/TypeScript), Go testing + testify, and RSpec (Ruby). Fixture generation, parametrize decorators, and proper imports are included in each output. Switch formats any time with the <code style="font-family:var(--font-mono);font-size:0.9em">--format</code> flag.</div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          Is there a free plan?
-          <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <div class="faq-answer">Yes. The Free plan includes 50,000 captured requests per month — forever. No credit card required. A "captured request" is a single HTTP request that your middleware records and sends to Httrace. At the default 10% sample rate, 50,000 captures correspond to roughly 500,000 actual API calls per month, which covers most small to medium services comfortably. If you're evaluating on a side project or staging environment, you can temporarily set <code style="font-family:var(--font-mono);font-size:0.9em">sample_rate=1.0</code> and evaluate within a few days without hitting the limit.</div>
+        <div class="faq-answer">Capture is asynchronous and off the critical path. In benchmarks on FastAPI, median latency increase is under 2ms at <code style="color:var(--accent)">sample_rate=0.1</code> (the default). At 100% sample rate, expect ~8ms overhead. We recommend 5–10% sampling in production.</div>
       </div>
     </div>
   </div>
@@ -2138,6 +2164,19 @@
 </footer>
 
 <script>
+  // Hero email → jump to waitlist form with email pre-filled
+  function heroEmailJump(e) {
+    e.preventDefault();
+    const email = document.getElementById('hero-email-input').value.trim();
+    const wlInput = document.querySelector('#waitlist-form-bottom input[type="email"]');
+    if (wlInput) wlInput.value = email;
+    document.getElementById('waitlist').scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => {
+      const pw = document.querySelector('#waitlist-form-bottom input[name="password"]');
+      if (pw) pw.focus();
+    }, 700);
+  }
+
   // Nav scroll effect
   const nav = document.getElementById('nav');
   window.addEventListener('scroll', () => {

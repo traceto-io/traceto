@@ -486,6 +486,55 @@
   #loading p { color: var(--text-muted); font-size: 14px; }
 
   #content { display: none; }
+
+  /* ── ONBOARDING BANNER ── */
+  .onboard-banner {
+    background: var(--bg-2); border: 1px solid var(--border-2);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px; padding: 20px 24px 24px;
+    margin-bottom: 28px; position: relative;
+  }
+  .onboard-banner-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .onboard-banner-title {
+    font-family: var(--font-display); font-size: 15px; font-weight: 700;
+    color: var(--text);
+  }
+  .onboard-banner-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+  .onboard-dismiss {
+    background: none; border: none; color: var(--text-muted); cursor: pointer;
+    font-size: 18px; line-height: 1; padding: 0 4px; transition: color 0.15s; flex-shrink: 0;
+  }
+  .onboard-dismiss:hover { color: var(--text); }
+  .onboard-steps {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  }
+  @media (max-width: 700px) { .onboard-steps { grid-template-columns: 1fr; } }
+  .onboard-step {
+    background: var(--bg-3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px;
+  }
+  .onboard-step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    color: var(--accent); margin-bottom: 10px;
+  }
+  .onboard-step-label {
+    font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+  .onboard-step-code {
+    background: var(--bg-4); border: 1px solid var(--border);
+    border-radius: 5px; padding: 8px 10px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);
+    white-space: pre; overflow-x: auto; line-height: 1.6;
+  }
+  .onboard-step-code .kw { color: var(--accent); }
+  .onboard-step-code .cm { color: var(--text-muted); }
 </style>
 </head>
 <body>
@@ -508,9 +557,55 @@
 
   <!-- Main content (hidden until data loads) -->
   <div id="content">
+
+    <!-- Onboarding banner — shown only on first visit -->
+    <div class="onboard-banner" id="onboard-banner" style="display:none">
+      <div class="onboard-banner-head">
+        <div>
+          <div class="onboard-banner-title">Get started in 3 steps</div>
+          <div class="onboard-banner-sub">Your API key is ready — here's how to capture your first requests.</div>
+        </div>
+        <button class="onboard-dismiss" id="onboard-dismiss" title="Dismiss">×</button>
+      </div>
+      <div class="onboard-steps">
+        <div class="onboard-step">
+          <div class="onboard-step-num">1</div>
+          <div class="onboard-step-label">Install the SDK</div>
+          <div class="onboard-step-code"><span class="cm"># Python</span>
+pip install httrace
+
+<span class="cm"># Node.js</span>
+npm install httrace
+
+<span class="cm"># Go / Ruby</span>
+go get httrace.io/sdk</div>
+        </div>
+        <div class="onboard-step">
+          <div class="onboard-step-num">2</div>
+          <div class="onboard-step-label">Add the middleware</div>
+          <div class="onboard-step-code"><span class="kw">from</span> httrace <span class="kw">import</span> HttptraceMiddleware
+
+app.add_middleware(
+  HttptraceMiddleware,
+  api_key=<span class="cm">"your-key"</span>,
+  sample_rate=<span class="cm">0.1</span>
+)</div>
+        </div>
+        <div class="onboard-step">
+          <div class="onboard-step-num">3</div>
+          <div class="onboard-step-label">Generate tests</div>
+          <div class="onboard-step-code"><span class="cm"># After traffic flows in:</span>
+httrace generate \
+  --api-key your-key \
+  --format pytest \
+  --output ./tests/</div>
+        </div>
+      </div>
+    </div>
+
     <div class="page-header">
       <div class="page-label">Dashboard</div>
-      <h1 class="page-title">Welcome back.</h1>
+      <h1 class="page-title" id="page-title">Welcome back.</h1>
     </div>
 
     <!-- Stats grid -->
@@ -1740,6 +1835,20 @@ async function load() {
     if (me.features?.teams_orgs) {
       loadOrgs();
     }
+
+    // Onboarding banner: show for first-time users (no captures yet + not dismissed)
+    const onboardBanner = document.getElementById('onboard-banner');
+    const onboardKey = 'httrace_onboarded';
+    if (!localStorage.getItem(onboardKey) && me.stats.total_captures === 0) {
+      onboardBanner.style.display = 'block';
+      // Replace generic "Welcome back." with first-timer greeting
+      const titleEl = document.getElementById('page-title');
+      if (titleEl) titleEl.textContent = 'Welcome to Httrace.';
+    }
+    document.getElementById('onboard-dismiss').addEventListener('click', () => {
+      onboardBanner.style.display = 'none';
+      localStorage.setItem(onboardKey, '1');
+    });
 
     // Show content
     document.getElementById('loading').style.display = 'none';
