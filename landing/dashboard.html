@@ -753,6 +753,16 @@ const API = 'https://api.httrace.com';
 // ── Auth ──────────────────────────────────────────────────────────────────
 
 function getJwt() {
+  // Handle OAuth callback: ?token=JWT&email=EMAIL in URL
+  const params = new URLSearchParams(window.location.search);
+  const urlToken = params.get('token');
+  const urlEmail = params.get('email');
+  if (urlToken) {
+    localStorage.setItem('httrace_jwt', urlToken);
+    if (urlEmail) localStorage.setItem('httrace_email', urlEmail);
+    // Clean URL without reloading
+    history.replaceState(null, '', window.location.pathname);
+  }
   const stored = localStorage.getItem('httrace_jwt');
   if (!stored) { window.location.href = '/login.html'; return null; }
   return stored;
