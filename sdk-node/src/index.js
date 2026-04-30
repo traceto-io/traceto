@@ -27,7 +27,11 @@ function _sanitizeOutgoingUrl(rawUrl) {
   }
 }
 
+const _HTTRACE_HOST = 'api.httrace.com';
+
 let _httpPatched = false;
+let _fetchPatched = false;
+let _origFetch = null;
 
 function _patchHttp() {
   if (_httpPatched) return;
@@ -57,6 +61,11 @@ function _patchHttp() {
           method = (opts.method || 'GET').toUpperCase();
         }
       } catch {}
+
+      // Never capture the SDK's own upload traffic to avoid self-capture loops
+      if (rawUrl.includes(_HTTRACE_HOST)) {
+        return origRequest(urlOrOptions, callbackOrOptions, callback);
+      }
 
       const req = origRequest(urlOrOptions, callbackOrOptions, callback);
 
@@ -91,6 +100,53 @@ function _patchHttp() {
 
   _patchModule(http, 'http');
   _patchModule(https, 'https');
+}
+
+// Patch the global fetch API available in Node 18+ so outgoing fetch() calls
+// are captured alongside http/https module calls.
+function _patchFetch() {
+  if (_fetchPatched) return;
+  if (typeof globalThis.fetch !== 'function') return;
+  _fetchPatched = true;
+  _origFetch = globalThis.fetch;
+
+  globalThis.fetch = async function patchedFetch(input, init) {
+    const store = _outgoingStore.getStore();
+    if (!store) return _origFetch(input, init);
+
+    let rawUrl = '';
+    const method = ((init && init.method) || 'GET').toUpperCase();
+    try {
+      if (typeof input === 'string') rawUrl = input;
+      else if (input instanceof URL) rawUrl = input.toString();
+      else if (input && typeof input.url === 'string') rawUrl = input.url;
+    } catch {}
+
+    // Never capture our own upload traffic
+    if (rawUrl.includes(_HTTRACE_HOST)) return _origFetch(input, init);
+
+    const t0 = Date.now();
+    const response = await _origFetch(input, init);
+    const latency = Date.now() - t0;
+
+    try {
+      const ct = response.headers.get('content-type') || '';
+      let body = null;
+      if (ct.includes('application/json')) {
+        try { body = await response.clone().json(); } catch {}
+      }
+      store.push({
+        type: 'http',
+        method,
+        url: _sanitizeOutgoingUrl(rawUrl),
+        response_status: response.status,
+        response_body: body,
+        latency_ms: latency,
+      });
+    } catch {}
+
+    return response;
+  };
 }
 
 const SENSITIVE_HEADERS = new Set([
@@ -227,7 +283,10 @@ function httrace(options = {}) {
   const _client = new HttraceClient(apiKey, endpoint || DEFAULT_ENDPOINT);
   const _exclude = new Set(excludePaths);
 
-  if (captureOutgoing) _patchHttp();
+  if (captureOutgoing) {
+    _patchHttp();
+    _patchFetch();
+  }
 
   return function httraceMiddleware(req, res, next) {
     const path = req.path || (req.url || '').split('?')[0];

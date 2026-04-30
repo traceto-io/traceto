@@ -75,6 +75,42 @@ module Httrace
 
   SENSITIVE_KEYS = %w[password secret token ssn credit_card card_number cvv]
 
+  # ── ActiveRecord SQL interceptor ───────────────────────────────────────────
+  #
+  # Subscribes to ActiveSupport::Notifications for 'sql.active_record' events.
+  # Only active when capture_outgoing: true AND capture_db: true.
+  # Rails only — requires ActiveSupport to be loaded.
+  #
+  def self.subscribe_active_record!
+    return if @ar_subscribed
+    @ar_subscribed = true
+
+    begin
+      require 'active_support/notifications'
+    rescue LoadError
+      return
+    end
+
+    ActiveSupport::Notifications.subscribe('sql.active_record') do |_name, started, finished, _id, data|
+      calls = Thread.current[:httrace_outgoing]
+      next unless calls
+
+      sql = data[:sql].to_s.strip
+      # Skip trivial / internal queries
+      next if sql.downcase.start_with?('pragma', 'select 1', 'commit', 'rollback', 'begin', 'savepoint', 'release savepoint')
+
+      latency_ms = (finished - started) * 1000.0
+      param_count = data[:binds]&.length || 0
+
+      calls << {
+        type:       'sql',
+        query:      sql,
+        params:     ['?'] * param_count,   # values redacted, only arity kept
+        latency_ms: latency_ms.round(2),
+      }
+    end
+  end
+
   # ── CaptureMiddleware ──────────────────────────────────────────────────────
   #
   # Rack middleware — works with Rails, Sinatra, Grape, and any Rack-compatible app.
@@ -86,15 +122,17 @@ module Httrace
   #   use Httrace::CaptureMiddleware, api_key: 'ht_...'
   #
   class CaptureMiddleware
-    # @param app             [#call]  the Rack app to wrap
-    # @param api_key         [String] your Httrace API key
-    # @param service         [String] service label shown in the dashboard
-    # @param sample_rate     [Float]  fraction of requests to capture (0.0–1.0)
-    # @param exclude_paths   [Array]  paths to skip
-    # @param endpoint        [String] override API endpoint (for self-hosted)
-    # @param capture_outgoing[Boolean] capture outgoing Net::HTTP + ActiveRecord SQL calls
+    # @param app             [#call]    the Rack app to wrap
+    # @param api_key         [String]   your Httrace API key
+    # @param service         [String]   service label shown in the dashboard
+    # @param sample_rate     [Float]    fraction of requests to capture (0.0–1.0)
+    # @param exclude_paths   [Array]    paths to skip
+    # @param endpoint        [String]   override API endpoint (for self-hosted)
+    # @param capture_outgoing[Boolean]  capture outgoing Net::HTTP calls
+    # @param capture_db      [Boolean]  capture ActiveRecord SQL calls (Rails only, requires capture_outgoing: true)
     def initialize(app, api_key:, service: 'default', sample_rate: 0.1,
-                   exclude_paths: nil, endpoint: nil, capture_outgoing: false)
+                   exclude_paths: nil, endpoint: nil, capture_outgoing: false,
+                   capture_db: false)
       @app              = app
       @service          = service
       @sample_rate      = sample_rate.to_f
@@ -104,6 +142,7 @@ module Httrace
 
       if capture_outgoing
         Net::HTTP.prepend(Httrace::NetHTTPInterceptor)
+        Httrace.subscribe_active_record! if capture_db
       end
     end
 

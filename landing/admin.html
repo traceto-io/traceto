@@ -540,12 +540,14 @@ function loadStats() {
 
 // ── Users ─────────────────────────────────────────────────────────────────
 
+const PLAN_QUOTAS = { free: 50000, indie: 500000, startup: 3000000, business: 15000000, enterprise: 100000000 };
+
 let _allUsers = [];
 
 function renderUsers(users) {
-  const maxCaptures = Math.max(1, ...users.map(u => u.captures_this_month));
   const rows = users.map(u => {
-    const pct = Math.min(100, Math.round((u.captures_this_month / maxCaptures) * 100));
+    const quota = PLAN_QUOTAS[u.plan] || 50000;
+    const pct = Math.min(100, Math.round((u.captures_this_month / quota) * 100));
     const planOpts = ['free','indie','startup','business','enterprise'].map(p =>
       `<option value="${p}"${p === u.plan ? ' selected' : ''}>${p}</option>`
     ).join('');
@@ -561,8 +563,9 @@ function renderUsers(users) {
       </td>
       <td>
         <div class="captures-bar-wrap">
-          <div class="captures-bar"><div class="captures-bar-fill" style="width:${pct}%"></div></div>
+          <div class="captures-bar"><div class="captures-bar-fill" style="width:${pct}%;background:${pct>=90?'var(--red)':pct>=70?'var(--yellow)':'var(--accent)'}"></div></div>
           <span class="num">${fmt(u.captures_this_month)}</span>
+          <span style="font-family:var(--font-m);font-size:10px;color:var(--muted)">${pct}%</span>
         </div>
       </td>
       <td><span class="num">${fmt(u.total_captures)}</span></td>

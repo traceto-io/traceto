@@ -30,6 +30,9 @@ import (
 	"time"
 )
 
+// Version is the current SDK version.
+const Version = "0.1.1"
+
 const defaultEndpoint = "https://api.httrace.com/v1/captures"
 
 var sensitiveHeaders = map[string]bool{

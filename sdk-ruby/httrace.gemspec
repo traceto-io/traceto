@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name          = 'httrace'
-  s.version       = '0.1.0'
+  s.version       = '0.1.1'
   s.summary       = 'Httrace Rack middleware — capture real traffic, auto-generate tests'
   s.description   = 'Rack middleware for Rails, Sinatra and any Rack app. Captures real HTTP traffic and sends it to the Httrace API, which automatically generates integration tests from it.'
   s.authors       = ['Httrace']

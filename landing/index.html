@@ -878,31 +878,58 @@
 
   /* ── FOOTER ── */
   footer {
-    background: var(--bg);
+    background: var(--bg-2);
     border-top: 1px solid var(--border);
-    padding: 32px 24px;
+    padding: 56px 24px 32px;
   }
   .footer-inner {
     max-width: 1100px;
     margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
   }
-  .footer-left { display: flex; flex-direction: column; gap: 4px; }
+  .footer-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 48px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+  .footer-brand { display: flex; flex-direction: column; gap: 12px; }
   .footer-logo {
     font-family: var(--font-display);
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 800;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.04em;
     color: var(--text);
     text-decoration: none;
+    display: inline-block;
   }
   .footer-logo span { color: var(--accent); }
-  .footer-copy { font-size: 12px; color: var(--text-muted); }
-  .footer-links { display: flex; gap: 24px; }
-  .footer-links a { font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
-  .footer-links a:hover { color: var(--text); }
+  .footer-tagline { font-size: 13px; color: var(--text-muted); line-height: 1.5; max-width: 260px; }
+  .footer-col-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+  }
+  .footer-col-links { display: flex; flex-direction: column; gap: 10px; }
+  .footer-col-links a { font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+  .footer-col-links a:hover { color: var(--text); }
+  .footer-bottom {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .footer-copy { font-size: 12px; color: var(--text-muted); font-family: var(--font-mono); }
+  .footer-badges { display: flex; gap: 10px; align-items: center; }
+  .footer-badge {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 4px;
+    color: var(--text-muted); background: var(--bg-3); border: 1px solid var(--border);
+    text-decoration: none; transition: color 0.2s, border-color 0.2s;
+  }
+  .footer-badge:hover { color: var(--text); border-color: var(--border-2); }
 
   /* ── MOBILE ── */
   @media (max-width: 768px) {
@@ -986,8 +1013,9 @@
     .waitlist-row .btn-primary { width: 100%; justify-content: center; }
 
     /* Footer */
-    .footer-inner { flex-direction: column; gap: 20px; text-align: center; }
-    .footer-links { flex-wrap: wrap; justify-content: center; gap: 16px; }
+    .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
+    .footer-brand { grid-column: 1 / -1; }
+    .footer-bottom { flex-direction: column; align-items: flex-start; gap: 14px; }
   }
 
   @media (max-width: 700px) {
@@ -1639,7 +1667,7 @@
         <thead>
           <tr>
             <th>Feature</th>
-            <th class="col-httrace">Httrace</th>
+            <th class="col-httrace"><span style="font-family:var(--font-display);font-weight:800;font-size:16px;letter-spacing:-0.04em">htt<span style="color:var(--accent)">race</span></span></th>
             <th>Keploy</th>
             <th>Speedscale</th>
             <th>GoReplay</th>
@@ -2042,20 +2070,46 @@
 <!-- ── FOOTER ── -->
 <footer>
   <div class="footer-inner">
-    <div class="footer-left">
-      <a href="#" class="footer-logo">htt<span>race</span></a>
-      <span class="footer-copy">© 2026 Httrace. Built for developers.</span>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="#" class="footer-logo">htt<span>race</span></a>
+        <p class="footer-tagline">Capture real production traffic. Auto-generate integration tests. No mocking. No guessing.</p>
+      </div>
+      <div>
+        <div class="footer-col-title">Product</div>
+        <div class="footer-col-links">
+          <a href="#how">How it works</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#compare">vs. Alternatives</a>
+          <a href="docs/">Documentation</a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Developers</div>
+        <div class="footer-col-links">
+          <a href="https://github.com/httrace-io/httrace" target="_blank" rel="noopener">GitHub</a>
+          <a href="docs/#sdk-python">Python SDK</a>
+          <a href="docs/#sdk-node">Node.js SDK</a>
+          <a href="docs/#sdk-go">Go SDK</a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Legal</div>
+        <div class="footer-col-links">
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="terms.html">Terms of Service</a>
+          <a href="impressum.html">Impressum</a>
+          <a href="datenschutz.html">Datenschutz</a>
+          <a href="agb.html">AGB</a>
+        </div>
+      </div>
     </div>
-    <div class="footer-links">
-      <a href="#how">Product</a>
-      <a href="#pricing">Pricing</a>
-      <a href="docs/">Docs</a>
-      <a href="https://github.com/httrace-io/httrace" target="_blank" rel="noopener">GitHub</a>
-      <a href="impressum.html">Impressum</a>
-      <a href="datenschutz.html">Datenschutz</a>
-      <a href="privacy.html">Privacy Policy</a>
-      <a href="agb.html">AGB</a>
-      <a href="terms.html">Terms</a>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2026 Httrace — Built for developers.</span>
+      <div class="footer-badges">
+        <a href="https://github.com/httrace-io/httrace" target="_blank" rel="noopener" class="footer-badge">Open Source ↗</a>
+        <a href="mailto:founders@httrace.com" class="footer-badge">Contact</a>
+      </div>
     </div>
   </div>
 </footer>
