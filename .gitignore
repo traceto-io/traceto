@@ -53,6 +53,13 @@ tests/integration/
 # Backend — NEVER push (lives only on the server)
 backend/
 
+# Infrastructure & session docs — NEVER push (contain server IPs, paths, secrets)
+PROJECT_STATUS.md
+IMPLEMENTATION_PLAN.md
+SESSION_*.md
+INFRA_*.md
+*.infra.md
+
 # Local-only directories
 video/
 demo/
