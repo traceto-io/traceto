@@ -40,8 +40,15 @@
   }
   .nav-logo { font-family: var(--font-display); font-weight: 800; font-size: 18px; color: var(--text); text-decoration: none; }
   .nav-logo span { color: var(--accent); }
-  .nav-right { display: flex; align-items: center; gap: 20px; }
-  .nav-email { font-size: 13px; color: var(--text-muted); font-family: var(--font-mono); }
+  .nav-right { display: flex; align-items: center; gap: 16px; min-width: 0; }
+  .nav-email {
+    font-size: 13px; color: var(--text-muted); font-family: var(--font-mono);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+  }
+  @media (max-width: 600px) {
+    nav { padding: 0 16px; }
+    .nav-email { display: none; }
+  }
   .nav-logout {
     font-size: 13px; color: var(--text-muted); background: none;
     border: 1px solid var(--border-2); border-radius: 6px;

@@ -160,6 +160,7 @@
   }
   .nav-avatar-link:hover { background: rgba(59,130,246,0.25); border-color: rgba(59,130,246,0.55); }
   .nav-login-link { transition: color 0.2s; }
+  .nav-controls { display: flex; align-items: center; gap: 8px; }
 
   /* ── HAMBURGER BUTTON ── */
   .nav-burger {
@@ -1242,15 +1243,17 @@
     <a href="https://github.com/httrace-io/httrace" target="_blank" rel="noopener">GitHub</a>
     <a href="contact.html">Contact</a>
     <a href="login.html" id="nav-login-link" class="nav-login-link">Log in</a>
-    <a href="dashboard.html" id="nav-avatar-link" class="nav-avatar-link" title="Open dashboard">—</a>
     <a href="#waitlist" class="nav-cta">Get free API key</a>
   </div>
-  <!-- Hamburger -->
-  <button class="nav-burger" id="nav-burger" aria-label="Open menu" aria-expanded="false">
-    <span></span>
-    <span></span>
-    <span></span>
-  </button>
+  <!-- Avatar + Hamburger (always visible) -->
+  <div class="nav-controls">
+    <a href="dashboard.html" id="nav-avatar-link" class="nav-avatar-link" title="Open dashboard">—</a>
+    <button class="nav-burger" id="nav-burger" aria-label="Open menu" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
 </nav>
 
 <!-- ── MOBILE MENU ── -->
