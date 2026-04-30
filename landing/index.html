@@ -146,6 +146,20 @@
     transition: opacity 0.2s !important;
   }
   .nav-cta:hover { opacity: 0.85; }
+  .nav-avatar-link {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(59,130,246,0.15);
+    border: 1px solid rgba(59,130,246,0.35);
+    font-family: var(--font-display); font-size: 13px; font-weight: 800;
+    color: var(--accent); text-decoration: none; text-transform: uppercase;
+    transition: background 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+  }
+  .nav-avatar-link:hover { background: rgba(59,130,246,0.25); border-color: rgba(59,130,246,0.55); }
+  .nav-login-link { transition: color 0.2s; }
 
   /* ── HAMBURGER BUTTON ── */
   .nav-burger {
@@ -1227,7 +1241,8 @@
     <a href="docs/">Docs</a>
     <a href="https://github.com/httrace-io/httrace" target="_blank" rel="noopener">GitHub</a>
     <a href="contact.html">Contact</a>
-    <a href="login.html">Log in</a>
+    <a href="login.html" id="nav-login-link" class="nav-login-link">Log in</a>
+    <a href="dashboard.html" id="nav-avatar-link" class="nav-avatar-link" title="Open dashboard">—</a>
     <a href="#waitlist" class="nav-cta">Get free API key</a>
   </div>
   <!-- Hamburger -->
@@ -1246,7 +1261,8 @@
   <a href="docs/" class="mobile-menu-link">Docs</a>
   <a href="https://github.com/httrace-io/httrace" target="_blank" rel="noopener" class="mobile-menu-link">GitHub</a>
   <a href="contact.html" class="mobile-menu-link">Contact</a>
-  <a href="login.html" class="mobile-menu-link">Log in</a>
+  <a href="login.html" id="mobile-login-link" class="mobile-menu-link">Log in</a>
+  <a href="dashboard.html" id="mobile-dashboard-link" class="mobile-menu-link" style="display:none">Dashboard →</a>
   <a href="#waitlist" class="mobile-menu-cta">Get your free API key →</a>
 </div>
 
@@ -1667,7 +1683,11 @@
         <thead>
           <tr>
             <th>Feature</th>
-            <th class="col-httrace"><span style="font-family:var(--font-display);font-weight:800;font-size:16px;letter-spacing:-0.04em">htt<span style="color:var(--accent)">race</span></span></th>
+            <th class="col-httrace">
+              <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:17px;letter-spacing:-0.04em;line-height:1">
+                <span style="color:#f0f0f0">htt</span><span style="color:#3b82f6">race</span>
+              </span>
+            </th>
             <th>Keploy</th>
             <th>Speedscale</th>
             <th>GoReplay</th>
@@ -2120,6 +2140,27 @@
   window.addEventListener('scroll', () => {
     nav.classList.toggle('scrolled', window.scrollY > 20);
   });
+
+  // ── Logged-in nav state ──────────────────────────────────────────────────
+  (function () {
+    const jwt = localStorage.getItem('httrace_jwt');
+    if (!jwt) return;
+    // Show avatar, hide "Log in"
+    const loginLink    = document.getElementById('nav-login-link');
+    const avatarLink   = document.getElementById('nav-avatar-link');
+    const mobileLogin  = document.getElementById('mobile-login-link');
+    const mobileDash   = document.getElementById('mobile-dashboard-link');
+    if (loginLink)   loginLink.style.display   = 'none';
+    if (mobileLogin) mobileLogin.style.display = 'none';
+    if (mobileDash)  mobileDash.style.display  = '';
+    if (avatarLink) {
+      const nameOrEmail = localStorage.getItem('httrace_name') || localStorage.getItem('httrace_email') || '?';
+      const initial = nameOrEmail.trim().charAt(0).toUpperCase();
+      avatarLink.textContent = initial;
+      avatarLink.title = 'Dashboard — ' + (localStorage.getItem('httrace_email') || '');
+      avatarLink.style.display = 'flex';
+    }
+  })();
 
   // Hamburger menu
   const burger = document.getElementById('nav-burger');

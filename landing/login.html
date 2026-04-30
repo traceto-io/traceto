@@ -11,10 +11,10 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #080808; --bg-2: #0e0e0e; --bg-3: #141414;
+    --bg: #080808; --bg-2: #0e0e0e; --bg-3: #141414; --bg-4: #1a1a1a;
     --border: #1f1f1f; --border-2: #2a2a2a;
     --text: #f0f0f0; --text-muted: #666; --text-dim: #999;
-    --accent: #3b82f6; --accent-dim: rgba(59,130,246,0.10);
+    --accent: #3b82f6;
     --green: #22c55e; --red: #ef4444;
     --font-display: 'Syne', sans-serif;
     --font-body: 'DM Sans', sans-serif;
@@ -23,9 +23,8 @@
   html, body { height: 100%; }
   body {
     background: var(--bg); color: var(--text);
-    font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+    font-family: var(--font-body); font-size: 15px; line-height: 1.6;
     -webkit-font-smoothing: antialiased;
-    display: flex; flex-direction: column; min-height: 100vh;
   }
   body::before {
     content: ''; position: fixed; inset: 0;
@@ -33,69 +32,123 @@
     opacity: 0.025; pointer-events: none; z-index: 9999;
   }
 
-  nav {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 48px; height: 64px; border-bottom: 1px solid var(--border);
-  }
-  .nav-logo { font-family: var(--font-display); font-weight: 800; font-size: 18px; color: var(--text); text-decoration: none; }
-  .nav-logo span { color: var(--accent); }
-
-  main {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    padding: 40px 24px;
+  /* ── 2-COLUMN SHELL ── */
+  .login-shell {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
   }
 
-  .login-card {
-    width: 100%; max-width: 420px;
-    background: var(--bg-2); border: 1px solid var(--border);
-    border-radius: 16px; padding: 40px;
+  /* ── LEFT SIDE ── */
+  .login-side {
+    background: var(--bg-2);
+    border-right: 1px solid var(--border);
+    padding: 48px 56px;
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
   }
+  .login-side::before {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    -webkit-mask-image: radial-gradient(ellipse 60% 50% at 30% 50%, #000 30%, transparent 80%);
+            mask-image: radial-gradient(ellipse 60% 50% at 30% 50%, #000 30%, transparent 80%);
+    opacity: 0.5; pointer-events: none;
+  }
+  .login-side::after {
+    content: ""; position: absolute; left: -100px; top: 30%;
+    width: 600px; height: 500px;
+    background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(59,130,246,0.18), transparent 70%);
+    pointer-events: none;
+  }
+  .login-side > * { position: relative; z-index: 1; }
 
-  .login-label {
+  .side-brand {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: 20px; letter-spacing: -0.04em;
+    text-decoration: none; color: var(--text); display: inline-block;
+  }
+  .side-brand .em { color: var(--accent); }
+
+  .side-quote { margin-top: auto; padding: 32px 0; }
+  .side-eyebrow {
+    display: block; margin-bottom: 18px;
     font-family: var(--font-mono); font-size: 11px;
-    letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--accent); margin-bottom: 16px;
+    letter-spacing: 0.12em; color: var(--accent); text-transform: uppercase;
+  }
+  .side-quote h1 {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: clamp(32px, 3.4vw, 50px);
+    line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 20px;
+  }
+  .side-quote h1 em { font-style: normal; color: var(--accent); }
+  .side-quote p {
+    font-size: 15px; line-height: 1.6;
+    color: var(--text-dim); max-width: 400px;
+  }
+
+  .side-stats {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; margin-top: 28px;
+  }
+  .side-stat { background: var(--bg-2); padding: 16px 18px; }
+  .side-stat-num {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: 24px; letter-spacing: -0.02em; color: var(--text);
+  }
+  .side-stat-lbl {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.08em; color: var(--text-muted);
+    text-transform: uppercase; margin-top: 4px;
+  }
+
+  /* ── RIGHT SIDE ── */
+  .login-form-side {
+    display: flex; align-items: center; justify-content: center;
+    padding: 48px; background: var(--bg);
+  }
+  .login-card { width: 100%; max-width: 400px; }
+
+  .form-eyebrow {
+    display: block; margin-bottom: 14px;
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.12em; color: var(--accent); text-transform: uppercase;
   }
   .login-title {
-    font-family: var(--font-display); font-size: 28px;
-    font-weight: 800; color: var(--text); letter-spacing: -0.02em;
-    margin-bottom: 8px;
+    font-family: var(--font-display); font-size: 34px; font-weight: 800;
+    letter-spacing: -0.03em; margin-bottom: 10px;
   }
-  .login-sub {
-    font-size: 14px; color: var(--text-muted); line-height: 1.6;
-    margin-bottom: 32px;
-  }
+  .login-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 30px; }
 
-  .field { margin-bottom: 16px; }
-  label { font-size: 13px; color: var(--text-dim); display: block; margin-bottom: 8px; }
+  .field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }
+  .field label {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted);
+  }
+  .field input {
+    background: var(--bg-2); border: 1px solid var(--border-2);
+    border-radius: 8px; padding: 12px 16px; color: var(--text);
+    font-family: var(--font-body); font-size: 14px; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+  }
+  .field input::placeholder { color: var(--text-muted); }
 
-  input[type="email"],
-  input[type="password"] {
-    width: 100%; padding: 12px 16px;
-    background: var(--bg-3); border: 1px solid var(--border-2);
-    border-radius: 8px; color: var(--text); font-size: 15px;
-    font-family: var(--font-body); outline: none;
-    transition: border-color 0.2s;
-  }
-  input[type="email"]:focus,
-  input[type="password"]:focus { border-color: var(--accent); }
-  input[type="email"]::placeholder,
-  input[type="password"]::placeholder { color: var(--text-muted); }
-
-  .forgot-row {
-    display: flex; justify-content: flex-end;
-    margin-top: 6px;
-  }
-  .forgot-link {
-    font-size: 12px; color: var(--text-muted); text-decoration: none;
-    transition: color 0.2s;
-  }
+  .forgot-row { display: flex; justify-content: flex-end; margin-top: 5px; }
+  .forgot-link { font-size: 12px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
   .forgot-link:hover { color: var(--accent); }
 
   .btn {
-    width: 100%; padding: 13px; margin-top: 24px;
+    width: 100%; padding: 13px; margin-top: 8px;
     background: var(--accent); color: #fff;
-    font-family: var(--font-display); font-size: 15px; font-weight: 700;
+    font-family: var(--font-display); font-size: 14px; font-weight: 700;
     border: none; border-radius: 8px; cursor: pointer;
     letter-spacing: -0.01em; transition: opacity 0.2s;
   }
@@ -103,101 +156,175 @@
   .btn:disabled { opacity: 0.5; cursor: default; }
 
   .status {
-    margin-top: 16px; padding: 12px 16px; border-radius: 8px;
-    font-size: 14px; display: none;
+    margin-top: 14px; padding: 11px 14px; border-radius: 8px;
+    font-size: 13px; display: none;
   }
   .status.success { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); color: var(--green); }
   .status.error { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); color: var(--red); }
   .status.visible { display: block; }
 
-  .divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+  .divider {
+    display: flex; align-items: center; gap: 14px;
+    margin: 26px 0;
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.12em; color: var(--text-muted); text-transform: uppercase;
+  }
+  .divider::before, .divider::after {
+    content: ""; flex: 1; height: 1px; background: var(--border);
+  }
 
-  .hint { font-size: 13px; color: var(--text-muted); text-align: center; line-height: 1.6; }
-  .hint a { color: var(--accent); text-decoration: none; }
-  .hint a:hover { text-decoration: underline; }
+  .oauth-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .oauth-btn {
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    padding: 11px 14px;
+    background: var(--bg-2); border: 1px solid var(--border-2);
+    border-radius: 8px; color: var(--text-dim); font-size: 13px;
+    font-family: var(--font-body);
+    cursor: pointer; transition: border-color 0.2s, color 0.2s, background 0.2s;
+  }
+  .oauth-btn:hover { border-color: var(--border); color: var(--text); background: var(--bg-3); }
+  .oauth-btn svg { fill: currentColor; flex-shrink: 0; }
+  .oauth-soon {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.06em;
+    background: var(--bg-4); border: 1px solid var(--border);
+    color: var(--text-muted); padding: 1px 5px; border-radius: 3px;
+    text-transform: uppercase; margin-left: auto;
+  }
+
+  .login-foot {
+    margin-top: 26px; font-size: 13px; color: var(--text-muted); text-align: center;
+  }
+  .login-foot a { color: var(--accent); text-decoration: none; }
+  .login-foot a:hover { text-decoration: underline; }
+
+  @media (max-width: 900px) {
+    .login-shell { grid-template-columns: 1fr; }
+    .login-side { display: none; }
+    .login-form-side { padding: 40px 24px; min-height: 100vh; }
+  }
 </style>
 </head>
 <body>
 
-<nav>
-  <a href="/" class="nav-logo">htt<span>race</span></a>
-</nav>
+<div class="login-shell">
 
-<main>
-  <div class="login-card">
-    <div class="login-label">Dashboard</div>
-    <h1 class="login-title">Log in to Httrace</h1>
-    <p class="login-sub">Enter your email and password to access your dashboard.</p>
-
-    <form id="login-form" autocomplete="on">
-      <div class="field">
-        <label for="email">Email address</label>
-        <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
-      </div>
-      <div class="field">
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
-        <div class="forgot-row">
-          <a href="/forgot-password.html" class="forgot-link">Forgot password?</a>
+  <!-- ── LEFT ── -->
+  <div class="login-side">
+    <a href="/" class="side-brand">htt<span class="em">race</span></a>
+    <div class="side-quote">
+      <span class="side-eyebrow">// the pitch</span>
+      <h1>Your users<br><em>write your tests.</em></h1>
+      <p>One install. Capture real production traffic. Generate integration tests in pytest, Jest, Vitest, Go, RSpec — without writing a single line.</p>
+      <div class="side-stats">
+        <div class="side-stat">
+          <div class="side-stat-num">142M</div>
+          <div class="side-stat-lbl">Requests captured</div>
+        </div>
+        <div class="side-stat">
+          <div class="side-stat-num">38K</div>
+          <div class="side-stat-lbl">Tests generated</div>
+        </div>
+        <div class="side-stat">
+          <div class="side-stat-num">99.9%</div>
+          <div class="side-stat-lbl">SLA · Team tier</div>
         </div>
       </div>
-      <button type="submit" class="btn" id="submit-btn">Log in</button>
-    </form>
-
-    <div class="status" id="status"></div>
-
-    <hr class="divider">
-    <p class="hint">
-      Not signed up yet? <a href="/#waitlist">Get your free API key →</a>
-    </p>
+    </div>
   </div>
-</main>
+
+  <!-- ── RIGHT ── -->
+  <div class="login-form-side">
+    <div class="login-card">
+      <span class="form-eyebrow">// sign in</span>
+      <h1 class="login-title">Welcome back.</h1>
+      <p class="login-sub">Sign in to your workspace and grab your API key.</p>
+
+      <form id="login-form" autocomplete="on">
+        <div class="field">
+          <label for="email">Work email</label>
+          <input type="email" id="email" name="email" placeholder="you@yourcompany.com" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="••••••••••••" required autocomplete="current-password">
+          <div class="forgot-row">
+            <a href="/forgot-password.html" class="forgot-link">Forgot password?</a>
+          </div>
+        </div>
+        <button type="submit" class="btn" id="submit-btn">Sign in →</button>
+      </form>
+
+      <div class="status" id="status"></div>
+
+      <div class="divider">or continue with</div>
+
+      <div class="oauth-row">
+        <button class="oauth-btn" onclick="oauthSoon()">
+          <svg width="15" height="15" viewBox="0 0 24 24"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55v-2.05c-3.2.7-3.87-1.39-3.87-1.39-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.68 1.24 3.34.95.1-.74.4-1.24.73-1.53-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.18-3.09-.12-.29-.51-1.46.11-3.04 0 0 .96-.31 3.15 1.18.92-.26 1.9-.39 2.87-.39.97 0 1.95.13 2.87.39 2.19-1.49 3.15-1.18 3.15-1.18.62 1.58.23 2.75.11 3.04.74.8 1.18 1.83 1.18 3.09 0 4.42-2.69 5.4-5.25 5.68.41.36.78 1.06.78 2.13v3.16c0 .31.21.66.79.55C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/></svg>
+          GitHub
+          <span class="oauth-soon">soon</span>
+        </button>
+        <button class="oauth-btn" onclick="oauthSoon()">
+          <svg width="15" height="15" viewBox="0 0 24 24"><path d="M21.35 11.1H12v3.8h5.4c-.5 2.5-2.7 3.7-5.4 3.7-3.3 0-6-2.7-6-6s2.7-6 6-6c1.5 0 2.8.5 3.9 1.5l2.7-2.7C16.9 3.9 14.6 3 12 3c-5 0-9 4-9 9s4 9 9 9c5.2 0 9-3.6 9-9 0-.6-.1-1.2-.2-1.8z"/></svg>
+          Google
+          <span class="oauth-soon">soon</span>
+        </button>
+      </div>
+
+      <p class="login-foot">No account yet? <a href="/#waitlist">Get a free API key →</a></p>
+    </div>
+  </div>
+</div>
 
 <script>
 const API = 'https://api.httrace.com';
 
-// If already logged in, redirect to dashboard
 if (localStorage.getItem('httrace_jwt')) window.location.href = '/dashboard.html';
 
-const form = document.getElementById('login-form');
-const btn = document.getElementById('submit-btn');
-const status = document.getElementById('status');
+const form     = document.getElementById('login-form');
+const btn      = document.getElementById('submit-btn');
+const statusEl = document.getElementById('status');
 
 function showStatus(msg, type) {
-  status.textContent = msg;
-  status.className = `status ${type} visible`;
+  statusEl.textContent = msg;
+  statusEl.className = `status ${type} visible`;
+}
+
+function oauthSoon() {
+  showStatus('GitHub & Google login coming soon — please sign in with email for now.', 'error');
 }
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const email = document.getElementById('email').value.trim();
+  const email    = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
   if (!email || !password) return;
 
   btn.disabled = true;
-  btn.textContent = 'Logging in…';
-  status.className = 'status';
+  btn.textContent = 'Signing in…';
+  statusEl.className = 'status';
 
   try {
-    const res = await fetch(`${API}/v1/auth/login`, {
-      method: 'POST',
+    const res  = await fetch(`${API}/v1/auth/login`, {
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body:    JSON.stringify({ email, password }),
     });
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
-      localStorage.setItem('httrace_jwt', data.token);
+      localStorage.setItem('httrace_jwt',   data.token);
       localStorage.setItem('httrace_email', data.email);
+      if (data.name) localStorage.setItem('httrace_name', data.name);
       window.location.href = '/dashboard.html';
     } else {
       showStatus(data.detail || 'Incorrect email or password.', 'error');
       btn.disabled = false;
-      btn.textContent = 'Log in';
+      btn.textContent = 'Sign in →';
     }
-  } catch (err) {
-    showStatus('Network error. Please try again.', 'error');
+  } catch {
+    showStatus('Network error — please try again.', 'error');
     btn.disabled = false;
-    btn.textContent = 'Log in';
+    btn.textContent = 'Sign in →';
   }
 });
 </script>
