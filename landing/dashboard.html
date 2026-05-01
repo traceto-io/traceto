@@ -855,10 +855,12 @@ const API = 'https://api.httrace.com';
 // ── Auth ──────────────────────────────────────────────────────────────────
 
 function getJwt() {
-  // Handle OAuth callback: ?token=JWT&email=EMAIL in URL
-  const params = new URLSearchParams(window.location.search);
-  const urlToken = params.get('token');
-  const urlEmail = params.get('email');
+  // Handle OAuth callback: token arrives in hash fragment (never sent to server)
+  // Falls back to query param for backwards compatibility
+  const hashParams = new URLSearchParams(window.location.hash.slice(1));
+  const queryParams = new URLSearchParams(window.location.search);
+  const urlToken = hashParams.get('token') || queryParams.get('token');
+  const urlEmail = hashParams.get('email') || queryParams.get('email');
   if (urlToken) {
     localStorage.setItem('httrace_jwt', urlToken);
     if (urlEmail) localStorage.setItem('httrace_email', urlEmail);
